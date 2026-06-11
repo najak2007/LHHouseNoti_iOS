@@ -10,8 +10,9 @@ import WebKit
 
 struct JSWebView: UIViewRepresentable {
     let url: URL
-    // 웹에서 "submitData"라는 이름으로 보낸 메시지를 담을 바인딩 변수
+    
     @Binding var messageFromWeb: String
+    let deviceUUID = DeviceIdentifier.shared.getDeviceUUID()
 
     func makeCoordinator() -> Coordinator {
         Coordinator(self)
@@ -22,7 +23,7 @@ struct JSWebView: UIViewRepresentable {
         
         // 💡 1. JavaScript -> Native 메시지를 받기 위한 핸들러 등록
         // 웹쪽 코드에서 window.webkit.messageHandlers.bridge.postMessage(데이터) 로 호출하게 됩니다.
-        contentController.add(context.coordinator, name: "bridge")
+        contentController.add(context.coordinator, name: "pushTokenReq")
         
         let config = WKWebViewConfiguration()
         config.userContentController = contentController
@@ -59,7 +60,7 @@ struct JSWebView: UIViewRepresentable {
         // 웹에서 postMessage를 보내면 이 메서드가 호출됩니다.
         func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
             // 등록한 이름("bridge")이 맞는지 확인
-            if message.name == "bridge" {
+            if message.name == "pushTokenReq" {
                 if let messageBody = message.body as? String {
                     print("📱 웹으로부터 받은 메시지: \(messageBody)")
                     // SwiftUI 뷰의 상태 업데이트
@@ -69,5 +70,12 @@ struct JSWebView: UIViewRepresentable {
                 }
             }
         }
+    }
+    
+    func sendDeviceInfoToWeb() {
+        let token = "1234"
+        
+
+        
     }
 }
