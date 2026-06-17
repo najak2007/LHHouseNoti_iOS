@@ -24,8 +24,9 @@ struct JSWebView: UIViewRepresentable {
         webView.navigationDelegate = context.coordinator
 
         viewModel.webView = webView // ViewModel에서 참조 가능하도록 저장
-
-        webView.load(URLRequest(url: url))
+        var request = URLRequest(url: url)
+        request.cachePolicy = .reloadIgnoringLocalAndRemoteCacheData
+        webView.load(request)
         return webView
     }
 
