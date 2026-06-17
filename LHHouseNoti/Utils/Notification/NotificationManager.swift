@@ -1,0 +1,98 @@
+//
+//  NotificationManager.swift
+//  LHHouseNoti
+//
+//  Created by najak on 6/16/26.
+//
+
+import Foundation
+import FirebaseMessaging
+import FirebaseFirestore
+import FirebaseAuth
+import UserNotifications
+import Combine
+
+class NotificationManager: NSObject, ObservableObject {
+
+    static let shared = NotificationManager()
+
+    @Published var fcmToken: String = ""
+
+    private override init() {}
+
+    // 현재 FCM 토큰 즉시 가져오기
+    func fetchCurrentToken() {
+        Messaging.messaging().token { token, error in
+            if let error = error {
+                print("FCM 토큰 조회 실패: \(error.localizedDescription)")
+                return
+            }
+            guard let token = token else { return }
+            DispatchQueue.main.async {
+                self.fcmToken = token
+            }
+            print("현재 FCM 토큰: \(token)")
+            self.saveTokenToFirestore(token)
+        }
+    }
+}
+
+// MARK: - FCM 토큰 관리
+extension NotificationManager: MessagingDelegate {
+
+    // 토큰 자동 갱신 시 호출
+    func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
+        guard let token = fcmToken else { return }
+
+        DispatchQueue.main.async {
+            self.fcmToken = token
+        }
+
+        print("FCM 토큰 갱신: \(token)")
+
+        // Firestore에 저장 (서버 없이 Firebase만 사용하는 경우)
+        saveTokenToFirestore(token)
+    }
+
+    // Firestore에 토큰 저장
+    private func saveTokenToFirestore(_ token: String) {
+        // 로그인된 유저가 있을 때만 저장
+        guard let userId = Auth.auth().currentUser?.uid else {
+            print("로그인 유저 없음 → 토큰 저장 생략")
+            return
+        }
+
+        Firestore.firestore()
+            .collection("users")
+            .document(userId)
+            .setData(["fcmToken": token], merge: true) { error in
+                if let error = error {
+                    print("Firestore 토큰 저장 실패: \(error.localizedDescription)")
+                } else {
+                    print("Firestore 토큰 저장 완료 ✅")
+                }
+            }
+    }
+}
+
+// MARK: - 알림 수신 처리
+extension NotificationManager: UNUserNotificationCenterDelegate {
+
+    // 포그라운드 알림 수신
+    func userNotificationCenter(_ center: UNUserNotificationCenter,
+                                 willPresent notification: UNNotification,
+                                 withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+        let userInfo = notification.request.content.userInfo
+        print("포그라운드 알림 수신: \(userInfo)")
+        completionHandler([.banner, .sound, .badge])
+    }
+
+    // 알림 탭 시
+    func userNotificationCenter(_ center: UNUserNotificationCenter,
+                                 didReceive response: UNNotificationResponse,
+                                 withCompletionHandler completionHandler: @escaping () -> Void) {
+        let userInfo = response.notification.request.content.userInfo
+        print("알림 탭: \(userInfo)")
+        completionHandler()
+    }
+}
