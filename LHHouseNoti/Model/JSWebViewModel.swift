@@ -15,6 +15,8 @@ class JSWebViewModel: ObservableObject {
     @Published var osType: String = "i"              // 0 : iOS, 1 : Android, 2 : 기타
     @Published var receivedMessage: String = ""
     
+    @Published var presentedDetail: WebViewDetail? = nil
+    
     weak var webView: WKWebView?
     
     init() {
@@ -46,4 +48,11 @@ class JSWebViewModel: ObservableObject {
         pushToken = token
         sendDeviceInfoToWeb()
     }
+}
+
+
+struct WebViewDetail: Identifiable {
+    let id = UUID()
+    let url: URL
+    let title: String
 }
