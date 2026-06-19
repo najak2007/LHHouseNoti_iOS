@@ -9,6 +9,9 @@ import SwiftUI
 import WebKit
 import Combine
 
+
+var expandWebViewCloseHandler = PassthroughSubject<Bool, Never>()
+
 class JSWebViewModel: ObservableObject {
     @Published var deviceUUID: String = ""
     @Published var pushToken: String = ""
@@ -16,6 +19,7 @@ class JSWebViewModel: ObservableObject {
     @Published var receivedMessage: String = ""
     
     @Published var presentedDetail: WebViewDetail? = nil
+    @Published var pushViewDetail: WebViewDetail? = nil
     
     weak var webView: WKWebView?
     
@@ -51,8 +55,17 @@ class JSWebViewModel: ObservableObject {
 }
 
 
-struct WebViewDetail: Identifiable {
+struct WebViewDetail: Identifiable, Hashable {
     let id = UUID()
     let url: URL
     let title: String
+    let PAN_ID: String
+    let CNP_CD_NM: String
+    let DTL_URL: String
+    let PAN_SS: String
+    let PAN_NM: String
+    let AIS_TP_CD_NM: String
+    let UPP_AIS_TP_CD: String
+    let PAN_NT_ST_DT: String
+    let CLSG_DT: String
 }
