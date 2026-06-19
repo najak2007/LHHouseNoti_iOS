@@ -218,28 +218,21 @@ struct JSWebView: UIViewRepresentable {
                     
                 }
                 
-                if action == "openWebView", let urlString = body["url"] as? String {
-                    expandWebView(urlString: urlString,
-                                  title: body["title"] as? String ?? "",
-                                  PAN_ID: body["PAN_ID"] as? String ?? "",
-                                  CNP_CD_NM: body["CNP_CD_NM"] as? String ?? "",
-                                  DTL_URL: body["DTL_URL"] as? String ?? "",
-                                  PAN_SS: body["PAN_SS"] as? String ?? "",
-                                  PAN_NM: body["PAN_NM"] as? String ?? "",
-                                  AIS_TP_CD_NM: body["AIS_TP_CD_NM"] as? String ?? "",
-                                  UPP_AIS_TP_CD: body["UPP_AIS_TP_CD"] as? String ?? "",
-                                  PAN_NT_ST_DT: body["PAN_NT_ST_DT"] as? String ?? "",
-                                  CLSG_DT: body["CLSG_DT"] as? String ?? ""
-                                  
-                    )
+                if action == "openWebView", let urlString = body["url"] as? String, let bodyDic = message.body as? [String: Any] {
+                    do {
+                        let jsonData = try JSONSerialization.data(withJSONObject: bodyDic, options: .prettyPrinted)
+                        let lhhoueseItemDic = try JSONDecoder().decode(LHHouseModel.self, from: jsonData)
+                        expandWebView(houseNotiDict: lhhoueseItemDic)
+                    } catch {
+                        
+                    }
                 }
             }
         }
         
-        private func expandWebView(urlString: String, title: String, PAN_ID: String, CNP_CD_NM: String, DTL_URL: String, PAN_SS: String, PAN_NM: String, AIS_TP_CD_NM: String, UPP_AIS_TP_CD: String, PAN_NT_ST_DT: String, CLSG_DT: String) {
-            guard let url = URL(string: urlString) else { return }
+        private func expandWebView(houseNotiDict: LHHouseModel) {
             DispatchQueue.main.async {
-                self.viewModel.presentedDetail = WebViewDetail(url: url, title: title, PAN_ID: PAN_ID, CNP_CD_NM: CNP_CD_NM, DTL_URL: DTL_URL, PAN_SS: PAN_SS, PAN_NM: PAN_NM, AIS_TP_CD_NM: AIS_TP_CD_NM, UPP_AIS_TP_CD: UPP_AIS_TP_CD, PAN_NT_ST_DT: PAN_NT_ST_DT, CLSG_DT: CLSG_DT)
+                self.viewModel.presentedDetail = houseNotiDict
             }
         }
     }

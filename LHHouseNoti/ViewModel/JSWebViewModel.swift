@@ -8,6 +8,7 @@
 import SwiftUI
 import WebKit
 import Combine
+import RealmSwift
 
 
 var expandWebViewCloseHandler = PassthroughSubject<Bool, Never>()
@@ -18,13 +19,15 @@ class JSWebViewModel: ObservableObject {
     @Published var osType: String = "i"              // 0 : iOS, 1 : Android, 2 : 기타
     @Published var receivedMessage: String = ""
     
-    @Published var presentedDetail: WebViewDetail? = nil
-    @Published var pushViewDetail: WebViewDetail? = nil
+    @Published var presentedDetail: LHHouseModel? = nil
     
     weak var webView: WKWebView?
     
+    private var realm: Realm?
+    
     init() {
         deviceUUID = DeviceIdentifier.shared.getDeviceUUID()
+        realm = RealmManager.shared.realm
     }
     
     // React로 UUID + Token + OSType
@@ -52,20 +55,4 @@ class JSWebViewModel: ObservableObject {
         pushToken = token
         sendDeviceInfoToWeb()
     }
-}
-
-
-struct WebViewDetail: Identifiable, Hashable {
-    let id = UUID()
-    let url: URL
-    let title: String
-    let PAN_ID: String
-    let CNP_CD_NM: String
-    let DTL_URL: String
-    let PAN_SS: String
-    let PAN_NM: String
-    let AIS_TP_CD_NM: String
-    let UPP_AIS_TP_CD: String
-    let PAN_NT_ST_DT: String
-    let CLSG_DT: String
 }

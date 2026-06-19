@@ -27,8 +27,10 @@ struct ContentView: View {
                         ExpandWebView(url: detail.url, title: detail.title)
                     }
 #endif
-                    .navigationDestination(item: $viewModel.presentedDetail) { detail in
-                        ExpandWebView(url: detail.url, title: detail.title)
+                    .navigationDestination(item: $viewModel.presentedDetail) { lhhouseModel in
+                        if let lhhouseUrl = URL(string: lhhouseModel.DTL_URL) {
+                            ExpandWebView(lhhouseModel: lhhouseModel)
+                        }
                     }
             }
         }
