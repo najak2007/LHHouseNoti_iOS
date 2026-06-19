@@ -4,6 +4,7 @@
 
 import SwiftUI
 import WebKit
+import Combine
 
 struct JSWebView: UIViewRepresentable {
     @ObservedObject var viewModel: JSWebViewModel
@@ -17,26 +18,62 @@ struct JSWebView: UIViewRepresentable {
         userContentController.add(context.coordinator, name: "nativeBridge")
         
         // ------------------------------------------------------------------
-        // [수정/확장] 기존 클릭 감지에 href="javascript:history.back();" 감지 스크립트 추가
+        // [수정/확장] 하단 메뉴바 제거 및 기존 클릭 감지 스크립트
         // ------------------------------------------------------------------
+        // makeUIView(context:) 내부의 jsString 정의 부분 수정
         let jsString = """
+        (function() {
+            // 1. 💡 전역 CSS 규칙 주입 (새로 요청하신 id와 class 추가)
+            // #mNav, #header 요소를 아예 생성 단계부터 원천 차단합니다.
+            var styleNode = document.createElement('style');
+            styleNode.type = 'text/css';
+            var cssRules = '#mNav, #header { display: none !important; visibility: hidden !important; opacity: 0 !important; pointer-events: none !important; height: 0 !important; width: 0 !important; }';
+            styleNode.innerHTML = cssRules;
+            document.documentElement.appendChild(styleNode);
+
+            // 2. 💡 MutationObserver를 활용해 요소가 동적으로 다시 켜지거나 생성될 때 강제 제어 (2중 보안)
+            var observer = new MutationObserver(function(mutations) {
+                // ID 타겟팅 감지 및 제어
+                var mNav = document.getElementById('mNav');
+                if (mNav) {
+                    mNav.style.setProperty('display', 'none', 'important');
+                    mNav.style.setProperty('visibility', 'hidden', 'important');
+                }
+                
+                var header = document.getElementById('header');
+                if (header) {
+                    header.style.setProperty('display', 'none', 'important');
+                    header.style.setProperty('visibility', 'hidden', 'important');
+                }
+
+                // body가 생겼을 때만 패딩 제거 (에러 방지 안전장치)
+                if (document.body) {
+                    document.body.style.setProperty('padding-bottom', '0px', 'important');
+                    document.body.style.setProperty('padding-top', '0px', 'important');
+                }
+            });
+            
+            observer.observe(document.documentElement, {
+                childList: true,
+                subtree: true
+            });
+        })();
+
+        // 3. 💡 뒤로가기 이벤트 리스너 (기존 코드 유지)
         document.addEventListener('click', function(event) {
             var target = event.target;
             
             while (target && target !== document) {
-                // 기존 LH 조건 체크
                 var isLHBack = target.classList.contains('btn_back') || 
                                target.classList.contains('ico_back') || 
                                target.id === 'btnBack' ||
                                target.getAttribute('aria-label') === '이전화면' ||
                                target.textContent.trim() === '목록';
                                
-                // [추가] href 속성에 javascript:history.back이 포함되어 있는지 체크
                 var href = target.getAttribute('href') || '';
                 var isJsHistoryBack = href.toLowerCase().includes('javascript:history.back');
 
                 if (isLHBack || isJsHistoryBack) {
-                    // Swift의 nativeBridge로 이벤트 전송
                     window.webkit.messageHandlers.nativeBridge.postMessage({
                         "action": "clickHeaderBackButton"
                     });
@@ -44,9 +81,30 @@ struct JSWebView: UIViewRepresentable {
                 }
                 target = target.parentNode;
             }
-        });
+        }, true);
+        
+        // JSWebView의 jsString 내부에 추가할 로직
+        document.addEventListener('click', function(event) {
+            var target = event.target;
+            while (target && target !== document) {
+                var href = target.getAttribute('href') || '';
+                
+                // 💡 href에 javascript:saveItrPan이 포함되어 있는지 체크
+                if (href.toLowerCase().includes('javascript:saveitrpan')) {
+                    window.webkit.messageHandlers.nativeBridge.postMessage({
+                        "action": "clickSaveItrPan"
+                    });
+                    break;
+                }
+                target = target.parentNode;
+            }
+        }, true);
+        
+        
         """
-        let userScript = WKUserScript(source: jsString, injectionTime: .atDocumentEnd, forMainFrameOnly: true)
+
+        // ⚠️ 중요: 주입 타이밍은 반드시 가장 빠른 .atDocumentStart여야 합니다.
+        let userScript = WKUserScript(source: jsString, injectionTime: .atDocumentStart, forMainFrameOnly: true)
         userContentController.addUserScript(userScript)
         // ------------------------------------------------------------------
 
@@ -83,6 +141,27 @@ struct JSWebView: UIViewRepresentable {
 
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
             viewModel.sendDeviceInfoToWeb()
+            
+            // ------------------------------------------------------------------
+            // 💡 [추가] 웹뷰 로딩이 완전히 끝난 시점(Ajax dynamic load 대응)에 다시 한번 숨김 처리 실행
+            // ------------------------------------------------------------------
+            let hideScript = """
+            var footerNav = document.getElementById('mNav');
+            if (footerNav) {
+                footerNav.style.setProperty('display', 'none', 'important');
+            }
+            
+            var header = document.getElementById('header');
+            if (header) {
+                header.style.setProperty('display', 'none', 'important');
+            }
+            
+            
+            document.body.style.setProperty('padding-bottom', '0px', 'important');
+            document.body.style.setProperty('padding-top', '0px', 'important');
+            """
+            webView.evaluateJavaScript(hideScript, completionHandler: nil)
+            // ------------------------------------------------------------------
         }
 
         func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
@@ -92,25 +171,14 @@ struct JSWebView: UIViewRepresentable {
                 return
             }
             
-            // ------------------------------------------------------------------
-            // [방법 1 추가] URL 스키마가 'javascript:history.back'인 경우 네이티브 액션 감지
-            // ------------------------------------------------------------------
             if let url = navigationAction.request.url, url.scheme == "javascript" {
                 let absoluteString = url.absoluteString.lowercased()
                 if absoluteString.contains("history.back") {
                     print("decidePolicyFor: javascript:history.back() 클릭 감지됨")
-                    
-                    // 네이티브 뒤로가기/창닫기 등의 동작을 수행하도록 뷰모델에 전달합니다.
-                    DispatchQueue.main.async {
-                        // 예: self.viewModel.closeDetailView() 또는 관련 처리
-                    }
-                    
-                    // 스크립트가 웹뷰 내에서 작동하길 원치 않으면 .cancel, 그대로 실행되길 원하면 .allow
                     decisionHandler(.cancel)
                     return
                 }
             }
-            // ------------------------------------------------------------------
             
             if navigationAction.navigationType != .linkActivated {
                 print("차단된 리다이렉트 URL: \(navigationAction.request.url?.absoluteString ?? "")")
@@ -124,7 +192,6 @@ struct JSWebView: UIViewRepresentable {
         // 메시지 수신부
         func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
             if message.name == "nativeBridge" {
-                // 1. 문자열로 들어오는 경우 처리
                 if let body = message.body as? String {
                     DispatchQueue.main.async {
                         self.viewModel.receivedMessage = body
@@ -135,30 +202,44 @@ struct JSWebView: UIViewRepresentable {
                     return
                 }
 
-                // 2. 딕셔너리([String: Any])로 들어오는 경우 처리
                 guard let body = message.body as? [String: Any],
                       let action = body["action"] as? String else {
                     return
                 }
                 
-                // [방법 2 작동] 상단 화살표 및 javascript:history.back() 이벤트 수신
                 if action == "clickHeaderBackButton" {
                     print("LH 웹뷰 상단 화살표 또는 history.back() 클릭됨!")
-                    // TODO: viewModel을 통해 현재 상세 웹뷰 창을 닫거나 목록으로 전송하는 로직 수행
-                    // 예: DispatchQueue.main.async { self.viewModel.closeDetailView() }
+                    expandWebViewCloseHandler.send(true)
                     return
                 }
                 
+                if action == "clickSaveItrPan" {
+                    print("관심공고 등록이 클릭됨!")
+                    
+                }
+                
                 if action == "openWebView", let urlString = body["url"] as? String {
-                    expandWebView(urlString: urlString, title: body["title"] as? String ?? "")
+                    expandWebView(urlString: urlString,
+                                  title: body["title"] as? String ?? "",
+                                  PAN_ID: body["PAN_ID"] as? String ?? "",
+                                  CNP_CD_NM: body["CNP_CD_NM"] as? String ?? "",
+                                  DTL_URL: body["DTL_URL"] as? String ?? "",
+                                  PAN_SS: body["PAN_SS"] as? String ?? "",
+                                  PAN_NM: body["PAN_NM"] as? String ?? "",
+                                  AIS_TP_CD_NM: body["AIS_TP_CD_NM"] as? String ?? "",
+                                  UPP_AIS_TP_CD: body["UPP_AIS_TP_CD"] as? String ?? "",
+                                  PAN_NT_ST_DT: body["PAN_NT_ST_DT"] as? String ?? "",
+                                  CLSG_DT: body["CLSG_DT"] as? String ?? ""
+                                  
+                    )
                 }
             }
         }
         
-        private func expandWebView(urlString: String, title: String) {
+        private func expandWebView(urlString: String, title: String, PAN_ID: String, CNP_CD_NM: String, DTL_URL: String, PAN_SS: String, PAN_NM: String, AIS_TP_CD_NM: String, UPP_AIS_TP_CD: String, PAN_NT_ST_DT: String, CLSG_DT: String) {
             guard let url = URL(string: urlString) else { return }
             DispatchQueue.main.async {
-                self.viewModel.presentedDetail = WebViewDetail(url: url, title: title)
+                self.viewModel.presentedDetail = WebViewDetail(url: url, title: title, PAN_ID: PAN_ID, CNP_CD_NM: CNP_CD_NM, DTL_URL: DTL_URL, PAN_SS: PAN_SS, PAN_NM: PAN_NM, AIS_TP_CD_NM: AIS_TP_CD_NM, UPP_AIS_TP_CD: UPP_AIS_TP_CD, PAN_NT_ST_DT: PAN_NT_ST_DT, CLSG_DT: CLSG_DT)
             }
         }
     }
