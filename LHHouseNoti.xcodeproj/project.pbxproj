@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		7AFA640A2FE56E1900E5D403 /* RealmSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 7AFA64092FE56E1900E5D403 /* RealmSwift */; };
+		7AFA640B2FE56E6A00E5D403 /* RealmSwift in Embed Frameworks */ = {isa = PBXBuildFile; productRef = 7AFA64092FE56E1900E5D403 /* RealmSwift */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		89E03D462FE0E10500E78711 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 89E03D452FE0E10500E78711 /* FirebaseAnalytics */; };
 		89E03D482FE0E10500E78711 /* FirebaseAnalyticsCore in Frameworks */ = {isa = PBXBuildFile; productRef = 89E03D472FE0E10500E78711 /* FirebaseAnalyticsCore */; };
 		89E03D4A2FE0E10500E78711 /* FirebaseAnalyticsIdentitySupport in Frameworks */ = {isa = PBXBuildFile; productRef = 89E03D492FE0E10500E78711 /* FirebaseAnalyticsIdentitySupport */; };
@@ -21,6 +23,20 @@
 		89E03D5C2FE0E10500E78711 /* FirebaseRemoteConfig in Frameworks */ = {isa = PBXBuildFile; productRef = 89E03D5B2FE0E10500E78711 /* FirebaseRemoteConfig */; };
 		89E03D5E2FE0E10500E78711 /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = 89E03D5D2FE0E10500E78711 /* FirebaseStorage */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		7AFA640C2FE56E6A00E5D403 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				7AFA640B2FE56E6A00E5D403 /* RealmSwift in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		891C67482FDAAE8A00FD3EAE /* LHHouseNoti.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LHHouseNoti.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -54,6 +70,7 @@
 			files = (
 				89E03D4C2FE0E10500E78711 /* FirebaseAppCheck in Frameworks */,
 				89E03D4E2FE0E10500E78711 /* FirebaseAuth in Frameworks */,
+				7AFA640A2FE56E1900E5D403 /* RealmSwift in Frameworks */,
 				89E03D462FE0E10500E78711 /* FirebaseAnalytics in Frameworks */,
 				89E03D5C2FE0E10500E78711 /* FirebaseRemoteConfig in Frameworks */,
 				89E03D522FE0E10500E78711 /* FirebaseCrashlytics in Frameworks */,
@@ -97,6 +114,7 @@
 				891C67442FDAAE8A00FD3EAE /* Sources */,
 				891C67452FDAAE8A00FD3EAE /* Frameworks */,
 				891C67462FDAAE8A00FD3EAE /* Resources */,
+				7AFA640C2FE56E6A00E5D403 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -120,6 +138,7 @@
 				89E03D592FE0E10500E78711 /* FirebaseMessaging */,
 				89E03D5B2FE0E10500E78711 /* FirebaseRemoteConfig */,
 				89E03D5D2FE0E10500E78711 /* FirebaseStorage */,
+				7AFA64092FE56E1900E5D403 /* RealmSwift */,
 			);
 			productName = LHHouseNoti;
 			productReference = 891C67482FDAAE8A00FD3EAE /* LHHouseNoti.app */;
@@ -151,6 +170,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				89E03D442FE0E10500E78711 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				7AFA64082FE56E1900E5D403 /* XCRemoteSwiftPackageReference "realm-swift" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 891C67492FDAAE8A00FD3EAE /* Products */;
@@ -412,6 +432,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		7AFA64082FE56E1900E5D403 /* XCRemoteSwiftPackageReference "realm-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/realm/realm-swift";
+			requirement = {
+				branch = community;
+				kind = branch;
+			};
+		};
 		89E03D442FE0E10500E78711 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
@@ -423,6 +451,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		7AFA64092FE56E1900E5D403 /* RealmSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7AFA64082FE56E1900E5D403 /* XCRemoteSwiftPackageReference "realm-swift" */;
+			productName = RealmSwift;
+		};
 		89E03D452FE0E10500E78711 /* FirebaseAnalytics */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 89E03D442FE0E10500E78711 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;

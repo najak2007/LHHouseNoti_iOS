@@ -12,9 +12,7 @@ struct ExpandWebView: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var jsWebViewModel = JSWebViewModel()
 
-    let url: URL
-    let title: String
-
+    let lhhouseModel: LHHouseModel
     
     var body: some View {
         ZStack {
@@ -33,7 +31,7 @@ struct ExpandWebView: View {
                                 .frame(width: 20, height: 20)
                         })
                         
-                        Text(title)
+                        Text(lhhouseModel.title)
                             .font(.system(size: 20, weight: .bold))
                             .foregroundColor(.black)
                     }
@@ -42,7 +40,7 @@ struct ExpandWebView: View {
                     Spacer()
                     
                     Button(action: {
-                        
+                        print("jsWebViewModel = \(lhhouseModel)")
                     }, label: {
                         Image(systemName: "star")
                             .resizable()
@@ -54,7 +52,7 @@ struct ExpandWebView: View {
                 }
                 
                 
-                JSWebView(viewModel: jsWebViewModel, url: url)
+                JSWebView(viewModel: jsWebViewModel, url: URL(string: lhhouseModel.DTL_URL)!)
 #if false
                     .navigationTitle(title)
                     .navigationBarTitleDisplayMode(.inline)
