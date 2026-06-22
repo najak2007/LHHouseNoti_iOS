@@ -146,6 +146,7 @@ struct JSWebView: UIViewRepresentable {
             webView.isInspectable = true
         }
         
+        webView.backgroundColor = .white
         viewModel.webView = webView
         var request = URLRequest(url: url)
         request.cachePolicy = .reloadIgnoringLocalAndRemoteCacheData

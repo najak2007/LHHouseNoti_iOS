@@ -43,7 +43,9 @@ struct ExpandWebView: View {
                     Spacer()
                     
                     Button(action: {
-                        self.isFavorite = self.jsWebViewModel.saveLHHouseFavorite(lhhouseModel)
+                        self.jsWebViewModel.saveLHHouseFavorite(lhhouseModel) { isFavorite in
+                            self.isFavorite = isFavorite
+                        }
                     }, label: {
                         Image(systemName: self.isFavorite == false ? "star" : "star.fill")
                             .resizable()
