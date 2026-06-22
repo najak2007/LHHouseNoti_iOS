@@ -19,7 +19,10 @@ class JSWebViewModel: ObservableObject {
     @Published var osType: String = "i"              // 0 : iOS, 1 : Android, 2 : 기타
     @Published var receivedMessage: String = ""
     
-    @Published var presentedDetail: LHHouseModel? = nil
+    @Published var presentedDetail: LHHouseFileDownModel? = nil
+    @Published var pushedViewDetail: LHHouseModel? = nil
+    
+    @Published var lhhouseFavorites: [LHHouseInfo] = []
     
     weak var webView: WKWebView?
     
@@ -28,6 +31,8 @@ class JSWebViewModel: ObservableObject {
     init() {
         deviceUUID = DeviceIdentifier.shared.getDeviceUUID()
         realm = RealmManager.shared.realm
+        
+        fetchLHHouseData()
     }
     
     // React로 UUID + Token + OSType
@@ -54,5 +59,42 @@ class JSWebViewModel: ObservableObject {
     func updatePushToken(_ token: String) {
         pushToken = token
         sendDeviceInfoToWeb()
+    }
+    
+    func fetchLHHouseData() {
+        guard let realm = realm else { return }
+        let results = realm.objects(LHHouseInfo.self)
+        lhhouseFavorites = Array(results).sorted(by: { $0.registerDate > $1.registerDate })
+    }
+    
+    func saveLHHouseFavorite(_ lhHouseModel: LHHouseModel) -> Bool {
+        guard let realm = realm else { return false }
+        let results = realm.objects(LHHouseInfo.self)
+        let lhhouseInfo = results.filter( { $0.PAN_ID == lhHouseModel.PAN_ID } )
+        
+        do {
+            if lhhouseInfo.isEmpty == false {
+                let lhHouseInfo = LHHouseInfo(lhHouseModel)
+                try realm.write {
+                    realm.add(lhHouseInfo)
+                    return true
+                }
+            } else {
+                try realm.write {
+                    realm.delete(lhhouseInfo)
+                    return false
+                }
+            }
+        } catch {
+            
+        }
+        return false
+    }
+    
+    func fetchLHHouseItem(_ lhHouseModel: LHHouseModel, completion: @escaping(Bool) -> Void) {
+        guard let realm = realm else { return }
+        let results = realm.objects(LHHouseInfo.self)
+        let lhhouseInfo = results.filter( { $0.PAN_ID == lhHouseModel.PAN_ID } )
+        completion(lhhouseInfo.isEmpty == false)
     }
 }

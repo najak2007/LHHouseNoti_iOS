@@ -5,6 +5,7 @@
 import SwiftUI
 import WebKit
 import Combine
+import SafariServices
 
 struct JSWebView: UIViewRepresentable {
     @ObservedObject var viewModel: JSWebViewModel
@@ -24,16 +25,14 @@ struct JSWebView: UIViewRepresentable {
         let jsString = """
         (function() {
             // 1. 💡 전역 CSS 규칙 주입 (새로 요청하신 id와 class 추가)
-            // #mNav, #header 요소를 아예 생성 단계부터 원천 차단합니다.
             var styleNode = document.createElement('style');
             styleNode.type = 'text/css';
-            var cssRules = '#mNav, #header { display: none !important; visibility: hidden !important; opacity: 0 !important; pointer-events: none !important; height: 0 !important; width: 0 !important; }';
+            var cssRules = '#mNav, #header, .subHeader { display: none !important; visibility: hidden !important; opacity: 0 !important; pointer-events: none !important; height: 0 !important; width: 0 !important; }';
             styleNode.innerHTML = cssRules;
             document.documentElement.appendChild(styleNode);
 
-            // 2. 💡 MutationObserver를 활용해 요소가 동적으로 다시 켜지거나 생성될 때 강제 제어 (2중 보안)
+            // 2. 💡 MutationObserver 제어
             var observer = new MutationObserver(function(mutations) {
-                // ID 타겟팅 감지 및 제어
                 var mNav = document.getElementById('mNav');
                 if (mNav) {
                     mNav.style.setProperty('display', 'none', 'important');
@@ -46,10 +45,15 @@ struct JSWebView: UIViewRepresentable {
                     header.style.setProperty('visibility', 'hidden', 'important');
                 }
 
-                // body가 생겼을 때만 패딩 제거 (에러 방지 안전장치)
                 if (document.body) {
                     document.body.style.setProperty('padding-bottom', '0px', 'important');
                     document.body.style.setProperty('padding-top', '0px', 'important');
+                }
+
+                var subHeaders = document.getElementsByClassName('subHeader');
+                for (var i = 0; i < subHeaders.length; i++) {
+                    subHeaders[i].style.setProperty('display', 'none', 'important');
+                    subHeaders[i].style.setProperty('visibility', 'hidden', 'important');
                 }
             });
             
@@ -59,7 +63,7 @@ struct JSWebView: UIViewRepresentable {
             });
         })();
 
-        // 3. 💡 뒤로가기 이벤트 리스너 (기존 코드 유지)
+        // 3. 💡 뒤로가기 이벤트 리스너
         document.addEventListener('click', function(event) {
             var target = event.target;
             
@@ -82,14 +86,13 @@ struct JSWebView: UIViewRepresentable {
                 target = target.parentNode;
             }
         }, true);
-        
-        // JSWebView의 jsString 내부에 추가할 로직
+
+        // 4. 💡 관심공고 저장 리스너
         document.addEventListener('click', function(event) {
             var target = event.target;
             while (target && target !== document) {
                 var href = target.getAttribute('href') || '';
                 
-                // 💡 href에 javascript:saveItrPan이 포함되어 있는지 체크
                 if (href.toLowerCase().includes('javascript:saveitrpan')) {
                     window.webkit.messageHandlers.nativeBridge.postMessage({
                         "action": "clickSaveItrPan"
@@ -99,8 +102,34 @@ struct JSWebView: UIViewRepresentable {
                 target = target.parentNode;
             }
         }, true);
-        
-        
+
+        // 5. 💡 바로보기(docViewer) 클릭 감지 및 파라미터 추출 (오류 수정 완료)
+        document.addEventListener('click', function(event) {
+            var target = event.target;
+            
+            while (target && target !== document) {
+                var onclickStr = target.getAttribute('onclick') || '';
+                
+                if (onclickStr.includes('docViewer')) {
+                    // ⚠️ Swift 멀티라인 내 정규식 이스케이프 가공 (\\s*, \\(, \\) 처리)
+                    var match = onclickStr.match(/docViewer\\s*\\(([^)]+)\\)/);
+                    
+                    if (match && match[1]) {
+                        var params = match[1].split(',').map(function(param) {
+                            // ⚠️ 따옴표 제거용 정규식 패턴도 안전하게 이스케이프 수정
+                            return param.trim().replace(/^['"]|['"]$/g, '');
+                        });
+                        
+                        window.webkit.messageHandlers.nativeBridge.postMessage({
+                            "action": "clickDocViewer",
+                            "params": params
+                        });
+                    }
+                    break;
+                }
+                target = target.parentNode;
+            }
+        }, true);
         """
 
         // ⚠️ 중요: 주입 타이밍은 반드시 가장 빠른 .atDocumentStart여야 합니다.
@@ -156,9 +185,9 @@ struct JSWebView: UIViewRepresentable {
                 header.style.setProperty('display', 'none', 'important');
             }
             
-            
             document.body.style.setProperty('padding-bottom', '0px', 'important');
             document.body.style.setProperty('padding-top', '0px', 'important');
+
             """
             webView.evaluateJavaScript(hideScript, completionHandler: nil)
             // ------------------------------------------------------------------
@@ -218,7 +247,15 @@ struct JSWebView: UIViewRepresentable {
                     
                 }
                 
-                if action == "openWebView", let urlString = body["url"] as? String, let bodyDic = message.body as? [String: Any] {
+                if action == "clickDocViewer" {
+                    if let paramsArr = body["params"] as? [Any], paramsArr.count > 2 {
+                        let lhhouseFileDownloadModel = LHHouseFileDownModel(filepath: paramsArr[0] as? String ?? "", filename: paramsArr[1] as? String ?? "", fileext: paramsArr[2] as? String ?? "")
+                        expandFileViewOpen(houseFileInfo: lhhouseFileDownloadModel)
+                        return
+                    }
+                }
+                
+                if action == "openWebView", let bodyDic = message.body as? [String: Any] {
                     do {
                         let jsonData = try JSONSerialization.data(withJSONObject: bodyDic, options: .prettyPrinted)
                         let lhhoueseItemDic = try JSONDecoder().decode(LHHouseModel.self, from: jsonData)
@@ -232,7 +269,27 @@ struct JSWebView: UIViewRepresentable {
         
         private func expandWebView(houseNotiDict: LHHouseModel) {
             DispatchQueue.main.async {
-                self.viewModel.presentedDetail = houseNotiDict
+                self.viewModel.pushedViewDetail = houseNotiDict
+            }
+        }
+        
+        private func expandFileViewOpen(houseFileInfo: LHHouseFileDownModel) {
+            let urlString = "https://apply.lh.or.kr/view/viewer/document/docviewer.do?filepath=\(houseFileInfo.filepath)&filename=\(houseFileInfo.filename)&fileext=\(houseFileInfo.fileext)"
+            
+            guard let url = URL(string: urlString) else { return }
+            
+            let safariVC = SFSafariViewController(url: url)
+            safariVC.modalPresentationStyle = .pageSheet
+            
+            let activeScene = UIApplication.shared.connectedScenes
+                    .filter { $0.activationState == .foregroundActive }
+                    .compactMap { $0 as? UIWindowScene }
+                    .first
+            
+            if let rootVC = activeScene?.windows.first(where: { $0.isKeyWindow })?.rootViewController {
+                DispatchQueue.main.async {
+                    rootVC.present(safariVC, animated: true, completion: nil)
+                }
             }
         }
     }
