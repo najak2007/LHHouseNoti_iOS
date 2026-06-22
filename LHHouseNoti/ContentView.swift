@@ -22,13 +22,8 @@ struct ContentView: View {
                             viewModel.updatePushToken(token)
                         }
                     }
-#if false
-                    .fullScreenCover(item: $viewModel.presentedDetail) { detail in
-                        ExpandWebView(url: detail.url, title: detail.title)
-                    }
-#endif
-                    .navigationDestination(item: $viewModel.presentedDetail) { lhhouseModel in
-                        if let lhhouseUrl = URL(string: lhhouseModel.DTL_URL) {
+                    .navigationDestination(item: $viewModel.pushedViewDetail) { lhhouseModel in
+                        if URL(string: lhhouseModel.DTL_URL) != nil {
                             ExpandWebView(lhhouseModel: lhhouseModel)
                         }
                     }

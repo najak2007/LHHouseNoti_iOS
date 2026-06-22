@@ -6,6 +6,56 @@
 //
 
 import Foundation
+import RealmSwift
+internal import Realm
+
+final class LHHouseInfo: Object, Comparable, Identifiable {
+    @Persisted dynamic var id: String = Date().getDateID()
+    @Persisted dynamic var  DTL_URL: String = ""
+    @Persisted dynamic var  title: String = ""
+    @Persisted dynamic var  PAN_ID: String = ""
+    @Persisted dynamic var  CNP_CD_NM: String = ""
+    @Persisted dynamic var  PAN_SS: String = ""
+    @Persisted dynamic var  PAN_NM: String = ""
+    @Persisted dynamic var  AIS_TP_CD_NM: String = ""
+    @Persisted dynamic var  UPP_AIS_TP_CD: String = ""
+    @Persisted dynamic var  PAN_NT_ST_DT: String = ""
+    @Persisted dynamic var  CLSG_DT: String = ""
+    @Persisted dynamic var registerDate: Date = Date()
+    
+    
+    override init() {
+        super.init()
+    }
+    
+    init(DTL_URL: String = "", title: String = "", PAN_ID: String = "", CNP_CD_NM: String = "", PAN_SS: String = "", PAN_NM: String = "", AIS_TP_CD_NM: String = "", PAN_NT_ST_DT: String = "", CLSG_DT: String = "") {
+        self.DTL_URL = DTL_URL
+        self.title = title
+        self.PAN_ID = PAN_ID
+        self.CNP_CD_NM = CNP_CD_NM
+        self.PAN_SS = PAN_SS
+        self.PAN_NM = PAN_NM
+        self.AIS_TP_CD_NM = AIS_TP_CD_NM
+        self.PAN_NT_ST_DT = PAN_NT_ST_DT
+        self.CLSG_DT = CLSG_DT
+    }
+    
+    init(_ lhHouseModel: LHHouseModel) {
+        self.DTL_URL = lhHouseModel.DTL_URL
+        self.title = lhHouseModel.title
+        self.PAN_ID = lhHouseModel.PAN_ID
+        self.CNP_CD_NM = lhHouseModel.CNP_CD_NM
+        self.PAN_SS = lhHouseModel.PAN_SS
+        self.PAN_NM = lhHouseModel.PAN_NM
+        self.AIS_TP_CD_NM = lhHouseModel.AIS_TP_CD_NM
+        self.PAN_NT_ST_DT = lhHouseModel.PAN_NT_ST_DT
+        self.CLSG_DT = lhHouseModel.CLSG_DT
+    }
+    
+    static func < (lhs: LHHouseInfo, rhs: LHHouseInfo) -> Bool {
+        return lhs.registerDate < rhs.registerDate
+    }
+}
 
 struct LHHouseModel: Codable, Hashable {
     let DTL_URL: String
@@ -18,4 +68,19 @@ struct LHHouseModel: Codable, Hashable {
     let UPP_AIS_TP_CD: String
     let PAN_NT_ST_DT: String
     let CLSG_DT: String
+}
+
+struct LHHouseFileDownModel: Codable, Identifiable {
+    var id = UUID()
+    
+    let filepath: String
+    let filename: String
+    let fileext: String
+    
+    // 💡 CodingKeys에서 id를 제외하여, JSON에는 없다는 것을 명시합니다.
+    enum CodingKeys: String, CodingKey {
+        case filepath
+        case filename
+        case fileext
+    }
 }
