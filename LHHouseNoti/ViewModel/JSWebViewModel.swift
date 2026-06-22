@@ -67,34 +67,41 @@ class JSWebViewModel: ObservableObject {
         lhhouseFavorites = Array(results).sorted(by: { $0.registerDate > $1.registerDate })
     }
     
-    func saveLHHouseFavorite(_ lhHouseModel: LHHouseModel) -> Bool {
-        guard let realm = realm else { return false }
+    func saveLHHouseFavorite(_ lhHouseModel: LHHouseModel, completion: @escaping(Bool) -> Void) {
+        guard let realm = realm
+        else {
+            completion(false)
+            return
+        }
         let results = realm.objects(LHHouseInfo.self)
         let lhhouseInfo = results.filter( { $0.PAN_ID == lhHouseModel.PAN_ID } )
         
         do {
-            if lhhouseInfo.isEmpty == false {
+            if lhhouseInfo.isEmpty == true {
                 let lhHouseInfo = LHHouseInfo(lhHouseModel)
                 try realm.write {
                     realm.add(lhHouseInfo)
-                    return true
+                    completion(true)
                 }
             } else {
                 try realm.write {
                     realm.delete(lhhouseInfo)
-                    return false
+                    completion(false)
                 }
             }
         } catch {
             
         }
-        return false
     }
     
     func fetchLHHouseItem(_ lhHouseModel: LHHouseModel, completion: @escaping(Bool) -> Void) {
         guard let realm = realm else { return }
         let results = realm.objects(LHHouseInfo.self)
         let lhhouseInfo = results.filter( { $0.PAN_ID == lhHouseModel.PAN_ID } )
+        
+        print("PAN_IO: \(lhHouseModel.PAN_ID), CNP_CD_NM: \(lhHouseModel.CNP_CD_NM), PAN_SS : \(lhHouseModel.PAN_SS), AIS_TP_CD_NM: \(lhHouseModel.AIS_TP_CD_NM), UPP_AIS_TP_CD: \(lhHouseModel.UPP_AIS_TP_CD), PAN_NT_ST_DT : \(lhHouseModel.PAN_NT_ST_DT), CLSG_DT: \(lhHouseModel.CLSG_DT)")
+        
+        
         completion(lhhouseInfo.isEmpty == false)
     }
 }
