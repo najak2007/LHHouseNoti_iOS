@@ -42,12 +42,17 @@ class JSWebViewModel: ObservableObject {
         guard let uuidData = try? JSONEncoder().encode(deviceUUID),
               let tokenData = try? JSONEncoder().encode(token),
               let osTypeData = try? JSONEncoder().encode(osType),
+              let modelNameData = try? JSONEncoder().encode(UIDevice.current.model),
+              let detailModelNameData = try? JSONEncoder().encode(UIDevice.current.detailedModelName),
               let uuidJSON = String(data: uuidData, encoding: .utf8),
               let tokenJSON = String(data: tokenData, encoding: .utf8),
-              let osTypeJSON = String(data: osTypeData, encoding: .utf8)
+              let osTypeJSON = String(data: osTypeData, encoding: .utf8),
+              let modelNameJSON = String(data: modelNameData, encoding: .utf8),
+              let detailModelNameJSON = String(data: detailModelNameData, encoding: .utf8)
+                
         else { return }
         
-        let script = "if(window.receiveDeviceInfo) { window.receiveDeviceInfo(\(uuidJSON), \(tokenJSON), \(osTypeJSON)) }"
+        let script = "if(window.receiveDeviceInfo) { window.receiveDeviceInfo(\(uuidJSON), \(tokenJSON), \(osTypeJSON), \(modelNameJSON), \(detailModelNameJSON)) }"
 
         webView?.evaluateJavaScript(script) { _, error in
             if let error = error {
