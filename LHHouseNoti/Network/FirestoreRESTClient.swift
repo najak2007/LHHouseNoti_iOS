@@ -14,23 +14,36 @@ class FirestoreRESTClient {
     
     // MARK: - 공통 토큰 획득
     private func getToken() async throws -> String {
+        
+        // 1. 익명 로그인 (타임아웃 10초)
         if Auth.auth().currentUser == nil {
-            try await Auth.auth().signInAnonymously()
+            print("🔐 익명 로그인 시도...")
+            
+            try await withThrowingTaskGroup(of: Void.self) { group in
+                group.addTask {
+                    try await Auth.auth().signInAnonymously()
+                    print("✅ 익명 로그인 성공")
+                }
+                group.addTask {
+                    try await Task.sleep(nanoseconds: 10_000_000_000) // 10초
+                    print("❌ 익명 로그인 타임아웃")
+                    throw URLError(.timedOut)
+                }
+                // 먼저 끝나는 태스크 결과 사용
+                try await group.next()
+                group.cancelAll()
+            }
         }
         
+        // 2. 토큰 획득
         guard let user = Auth.auth().currentUser else {
             throw URLError(.userAuthenticationRequired)
         }
         
-        return try await withCheckedThrowingContinuation { continuation in
-            user.getIDToken { token, error in
-                if let token = token {
-                    continuation.resume(returning: token)
-                } else {
-                    continuation.resume(throwing: error ?? URLError(.userAuthenticationRequired))
-                }
-            }
-        }
+        print("🎫 토큰 획득 시도...")
+        let token = try await user.getIDToken()
+        print("✅ 토큰 획득 성공")
+        return token
     }
     
     // MARK: - CREATE / UPDATE (PUT)
