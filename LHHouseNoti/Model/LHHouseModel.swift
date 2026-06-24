@@ -22,13 +22,13 @@ final class LHHouseInfo: Object, Comparable, Identifiable {
     @Persisted dynamic var  PAN_NT_ST_DT: String = ""
     @Persisted dynamic var  CLSG_DT: String = ""
     @Persisted dynamic var registerDate: Date = Date()
-    
+    @Persisted dynamic var isAlarmFlag: Bool = true
     
     override init() {
         super.init()
     }
     
-    init(DTL_URL: String = "", title: String = "", PAN_ID: String = "", CNP_CD_NM: String = "", PAN_SS: String = "", PAN_NM: String = "", AIS_TP_CD_NM: String = "", PAN_NT_ST_DT: String = "", CLSG_DT: String = "") {
+    init(DTL_URL: String = "", title: String = "", PAN_ID: String = "", CNP_CD_NM: String = "", PAN_SS: String = "", PAN_NM: String = "", AIS_TP_CD_NM: String = "", PAN_NT_ST_DT: String = "", CLSG_DT: String = "", isAlarmFlag: Bool = true) {
         self.DTL_URL = DTL_URL
         self.title = title
         self.PAN_ID = PAN_ID
@@ -38,6 +38,7 @@ final class LHHouseInfo: Object, Comparable, Identifiable {
         self.AIS_TP_CD_NM = AIS_TP_CD_NM
         self.PAN_NT_ST_DT = PAN_NT_ST_DT
         self.CLSG_DT = CLSG_DT
+        self.isAlarmFlag = isAlarmFlag
     }
     
     init(_ lhHouseModel: LHHouseModel) {
@@ -54,6 +55,10 @@ final class LHHouseInfo: Object, Comparable, Identifiable {
     
     static func < (lhs: LHHouseInfo, rhs: LHHouseInfo) -> Bool {
         return lhs.registerDate < rhs.registerDate
+    }
+    
+    var lhhouseModel: LHHouseModel {
+        return LHHouseModel(DTL_URL: self.DTL_URL, title: self.title, PAN_ID: self.PAN_ID, CNP_CD_NM: self.CNP_CD_NM, PAN_SS: self.PAN_SS, PAN_NM: self.PAN_NM, AIS_TP_CD_NM: self.AIS_TP_CD_NM, UPP_AIS_TP_CD: self.UPP_AIS_TP_CD, PAN_NT_ST_DT: self.PAN_NT_ST_DT, CLSG_DT: self.CLSG_DT)
     }
 }
 

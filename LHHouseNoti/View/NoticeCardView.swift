@@ -8,32 +8,46 @@ import SwiftUI
 
 
 struct NoticeCardView: View {
-    let item: LHHouseModel
+    let item: LHHouseInfo
 
     var body: some View {
         // CSS: .notice-card
         VStack(alignment: .leading, spacing: 0) {
             
             // 1. 뱃지 영역 (.badge-container)
-            HStack(spacing: 6) {
-                // 공고상태 뱃지 (.badge-status: background #e6f7ed, text #219653)
-                Text(item.PAN_SS)
-                    .font(.system(size: 13, weight: .bold))
-                    .padding(.semibold)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 3)
-                    .background(Color(red: 0.90, green: 0.97, blue: 0.93))
-                    .foregroundColor(Color(red: 0.13, green: 0.59, blue: 0.33))
-                    .cornerRadius(12)
+            HStack {
+                HStack(spacing: 6) {
+                    // 공고상태 뱃지 (.badge-status: background #e6f7ed, text #219653)
+                    Text(item.PAN_SS)
+                        .font(.system(size: 13, weight: .bold))
+                        .fontWeight(.semibold)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(Color(red: 0.90, green: 0.97, blue: 0.93))
+                        .foregroundColor(Color(red: 0.13, green: 0.59, blue: 0.33))
+                        .cornerRadius(12)
+                    
+                    // 지역 뱃지 (.badge-region: background #e8f2ff, text #2f80ed)
+                    Text(item.CNP_CD_NM)
+                        .font(.system(size: 13, weight: .bold))
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(Color(red: 0.91, green: 0.95, blue: 1.00))
+                        .foregroundColor(Color(red: 0.18, green: 0.50, blue: 0.93))
+                        .cornerRadius(12)
+                }
                 
-                // 지역 뱃지 (.badge-region: background #e8f2ff, text #2f80ed)
-                Text(item.CNP_CD_NM)
-                    .font(.system(size: 13, weight: .bold))
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 3)
-                    .background(Color(red: 0.91, green: 0.95, blue: 1.00))
-                    .foregroundColor(Color(red: 0.18, green: 0.50, blue: 0.93))
-                    .cornerRadius(12)
+                Spacer()
+                
+                Button(action: {
+                    
+                }, label: {
+                    Image(systemName: "bell")
+                        .resizable()
+                        .frame(width: 20, height: 20)
+                        .foregroundColor(.black)
+                })
+                .padding(.trailing, 8)
             }
             .padding(.bottom, 8)
             
