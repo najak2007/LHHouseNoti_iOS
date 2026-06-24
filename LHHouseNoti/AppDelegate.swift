@@ -13,10 +13,11 @@ import UserNotifications
 class AppDelegate: NSObject, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
         
+        FirebaseApp.configure()
+        
         // FCM 델리게이트
         Messaging.messaging().delegate = NotificationManager.shared
 
-        
         
         // 알림 권한 요청
         UNUserNotificationCenter.current().delegate = NotificationManager.shared
