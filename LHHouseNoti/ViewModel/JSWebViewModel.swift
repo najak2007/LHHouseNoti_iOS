@@ -9,9 +9,11 @@ import SwiftUI
 import WebKit
 import Combine
 import RealmSwift
+internal import Realm
 
 
 var expandWebViewCloseHandler = PassthroughSubject<Bool, Never>()
+var lhhouseAlarmYNHandler = PassthroughSubject<Bool, Never>()
 
 class JSWebViewModel: ObservableObject {
     @Published var deviceUUID: String = ""
@@ -23,6 +25,8 @@ class JSWebViewModel: ObservableObject {
     @Published var pushedViewDetail: LHHouseModel? = nil
     
     @Published var lhhouseFavorites: [LHHouseInfo] = []
+    
+    private var notificationToken: NotificationToken?  // 추가
     
     weak var webView: WKWebView?
     
@@ -68,35 +72,62 @@ class JSWebViewModel: ObservableObject {
     
     func fetchLHHouseData() {
         guard let realm = realm else { return }
-        let results = realm.objects(LHHouseInfo.self)
-        lhhouseFavorites = Array(results).sorted(by: { $0.registerDate > $1.registerDate })
+
+        let sortedResults = realm.objects(LHHouseInfo.self)
+            .sorted(byKeyPath: "registerDate", ascending: false)
+
+        // 기존 Array(...) 스냅샷 대신 observe로 변경 구독
+        notificationToken = sortedResults.observe { [weak self] changes in
+            guard let self else { return }
+            switch changes {
+            case .initial(let results), .update(let results, _, _, _):
+                DispatchQueue.main.async {
+                    self.lhhouseFavorites = Array(results)
+                }
+            case .error(let error):
+                print("Realm observe 에러: \(error)")
+            }
+        }
+    }
+
+    deinit {
+        notificationToken?.invalidate()  // 추가
     }
     
     func saveLHHouseFavorite(_ lhHouseModel: LHHouseModel, completion: @escaping(Bool) -> Void) {
-        guard let realm = realm
-        else {
+        guard let realm = self.realm else {
             completion(false)
             return
         }
-        let results = realm.objects(LHHouseInfo.self)
-        let lhhouseInfo = results.filter( { $0.PAN_ID == lhHouseModel.PAN_ID } )
+        
+        // Realm 전용 쿼리로 찾기 (NSPredicate 또는 체이닝)
+        let targets = realm.objects(LHHouseInfo.self).filter("PAN_ID == %@", lhHouseModel.PAN_ID)
+        var isRegister: Bool = true
         
         do {
-            if lhhouseInfo.isEmpty == true {
-                let lhHouseInfo = LHHouseInfo(lhHouseModel)
-                try realm.write {
-                    realm.add(lhHouseInfo)
-                    completion(true)
-                }
-            } else {
-                try realm.write {
-                    realm.delete(lhhouseInfo)
-                    completion(false)
+            try realm.write {
+                if targets.isEmpty {
+                    let newHouseInfo = LHHouseInfo(lhHouseModel)
+                    realm.add(newHouseInfo)
+                    isRegister = true
+                } else {
+                    // Realm의 Results 타입을 그대로 delete에 전달하여 안전하게 삭제
+                    realm.delete(targets)
+                    isRegister = false
                 }
             }
         } catch {
-            
+            print("Realm 에러: \(error)")
+            completion(false)
+            return
         }
+        
+        // 중요: 여기서 UI가 참조하는 배열이나 뷰모델의 데이터를 완전히 새로고침 해줘야 합니다.
+        fetchLHHouseData()
+        
+        setLHHouseNotiSettingRequest(isRegister, lhhouseInfo: lhHouseModel)
+        
+        completion(isRegister)
     }
     
     func fetchLHHouseItem(_ lhHouseModel: LHHouseModel, completion: @escaping(Bool) -> Void) {
@@ -108,5 +139,29 @@ class JSWebViewModel: ObservableObject {
         
         
         completion(lhhouseInfo.isEmpty == false)
+    }
+    
+    func setLHHouseNotiSettingRequest(_ isOn: Bool = true, lhhouseInfo: LHHouseModel) {
+        let client = FirestoreRESTClient()
+        
+        if isOn {
+            Task {
+                try await client.setDocument(
+                    collection: "users",
+                    documentId: deviceUUID,
+                    fields: [
+                        "CNP_CD_NM" : lhhouseInfo.CNP_CD_NM,
+                    ]
+                    
+                )
+            }
+        } else {
+            Task {
+                try await client.deleteDocument(
+                    collection: "users",
+                    documentId: deviceUUID
+                )
+            }
+        }
     }
 }

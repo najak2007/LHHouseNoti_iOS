@@ -36,16 +36,14 @@ struct ContentView: View {
             }
             Tab("즐겨찾기", systemImage: "star.circle", value: 1) {
                 NavigationStack {
-                                    FavoritesView(viewModel: viewModel)
-                                        .navigationTitle("즐겨찾기") // 필요 시 타이틀 지정
-                                        .navigationBarTitleDisplayMode(.inline)
-                                        .navigationDestination(item: $viewModel.pushedViewDetail) { lhhouseModel in
-                                            if URL(string: lhhouseModel.DTL_URL) != nil {
-                                                ExpandWebView(lhhouseModel: lhhouseModel)
-                                                    .toolbar(.hidden, for: .tabBar) // 푸시될 때 하단 탭 숨김
-                                            }
-                                        }
-                                }
+                    FavoritesView(viewModel: viewModel)
+                        .navigationDestination(item: $viewModel.pushedViewDetail) { lhhouseModel in
+                        if URL(string: lhhouseModel.DTL_URL) != nil {
+                            ExpandWebView(lhhouseModel: lhhouseModel)
+                            .toolbar(.hidden, for: .tabBar) // 푸시될 때 하단 탭 숨김
+                        }
+                    }
+                }
             }
         }
     }
