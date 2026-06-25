@@ -10,6 +10,10 @@ import FirebaseAuth
 
 class FirestoreRESTClient {
     
+    static let shared = FirestoreRESTClient()
+    
+    private init() {}
+    
     let baseURL = "https://firestore.googleapis.com/v1/projects/lhhousenoti/databases/(default)/documents"
     
     // MARK: - 공통 토큰 획득
@@ -125,11 +129,20 @@ class FirestoreRESTClient {
         var decoded: [String: Any] = [:]
         for (key, value) in fields {
             guard let typeMap = value as? [String: Any] else { continue }
-            decoded[key] = typeMap["stringValue"]
-                ?? typeMap["integerValue"]
-                ?? typeMap["doubleValue"]
-                ?? typeMap["booleanValue"]
-                ?? typeMap["arrayValue"]
+            
+            if let stringValue = typeMap["stringValue"] {
+                decoded[key] = stringValue
+            } else if let intValue = typeMap["integerValue"] {
+                decoded[key] = intValue
+            } else if let doubleValue = typeMap["doubleValue"] {
+                decoded[key] = doubleValue
+            } else if let boolValue = typeMap["booleanValue"] {
+                decoded[key] = boolValue
+            } else if let arrayValue = typeMap["arrayValue"] as? [String: Any],
+                      let values = arrayValue["values"] as? [[String: Any]] {
+                // ✅ arrayValue → [String] 변환
+                decoded[key] = values.compactMap { $0["stringValue"] as? String }
+            }
         }
         return decoded
     }

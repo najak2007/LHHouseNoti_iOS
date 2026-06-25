@@ -8,8 +8,12 @@ import SwiftUI
 
 
 struct NoticeCardView: View {
+    var viewModel: JSWebViewModel
     let item: LHHouseInfo
+    @State private var isAlarmOn: Bool = false
+    
 
+    
     var body: some View {
         // CSS: .notice-card
         VStack(alignment: .leading, spacing: 0) {
@@ -40,14 +44,21 @@ struct NoticeCardView: View {
                 Spacer()
                 
                 Button(action: {
-                    
+                    self.viewModel.setLHHouseNotiSettingRequest(!isAlarmOn, panId: item.PAN_ID, cnpCDNM: item.CNP_CD_NM) { isResult in
+                        if isResult {
+                            isAlarmOn.toggle()
+                        }
+                    }
                 }, label: {
-                    Image(systemName: "bell")
+                    Image(systemName: isAlarmOn == true ? "bell" : "bell.slash")
                         .resizable()
                         .frame(width: 20, height: 20)
                         .foregroundColor(.black)
                 })
                 .padding(.trailing, 8)
+                .onAppear {
+                    isAlarmOn = item.isAlarmFlag
+                }
             }
             .padding(.bottom, 8)
             

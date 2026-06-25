@@ -9,6 +9,7 @@ import SwiftUI
 
 struct FavoritesView: View {
     @ObservedObject var viewModel: JSWebViewModel
+
     
     var body: some View {
         ZStack {
@@ -41,7 +42,7 @@ struct FavoritesView: View {
                                 Button {
                                     viewModel.pushedViewDetail = item.lhhouseModel
                                 } label: {
-                                    NoticeCardView(item: item)
+                                    NoticeCardView(viewModel: viewModel, item: item)
                                 }
                                 .buttonStyle(PlainButtonStyle())
                             }
