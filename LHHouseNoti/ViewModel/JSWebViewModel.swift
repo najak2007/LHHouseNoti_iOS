@@ -161,7 +161,7 @@ class JSWebViewModel: ObservableObject {
                         return
                     }
                     newHouseInfo.isAlarmFlag = isAlarmValue
-                    realm.add(newHouseInfo, update: .all)
+                    realm.add(newHouseInfo)
                     completion(true)
                 }
             }
