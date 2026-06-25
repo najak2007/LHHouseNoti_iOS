@@ -10,6 +10,7 @@ import WebKit
 import Combine
 import RealmSwift
 internal import Realm
+import FirebaseAnalytics
 
 
 var expandWebViewCloseHandler = PassthroughSubject<Bool, Never>()
@@ -99,7 +100,6 @@ class JSWebViewModel: ObservableObject {
             completion(false)
             return
         }
-        
         // Realm 전용 쿼리로 찾기 (NSPredicate 또는 체이닝)
         let targets = realm.objects(LHHouseInfo.self).filter("PAN_ID == %@", lhHouseModel.PAN_ID)
         var isRegister: Bool = true
@@ -124,11 +124,55 @@ class JSWebViewModel: ObservableObject {
         
         // 중요: 여기서 UI가 참조하는 배열이나 뷰모델의 데이터를 완전히 새로고침 해줘야 합니다.
         fetchLHHouseData()
-        
         setLHHouseNotiSettingRequest(isRegister, lhhouseInfo: lhHouseModel)
-        
         completion(isRegister)
     }
+
+    func setLHHouseNotiSettingRequest(_ isOn: Bool = true, panId: String, cnpCDNM: String, completion: @escaping(Bool) -> Void) {
+        Task {
+            do {
+                if isOn {
+                    try await addCNP(cnpCDNM)
+                } else {
+                    try await removeCNP(cnpCDNM)
+                }
+                lhHouseInfoOfAlarmUpdate(panId: panId, isAlarmValue: isOn, completion: completion)
+            } catch {
+                completion(false)
+            }
+        }
+    }
+    
+    func lhHouseInfoOfAlarmUpdate(panId: String, isAlarmValue: Bool, completion: @escaping(Bool) -> Void) {
+        guard let realm = self.realm
+        else {
+            completion(false)
+            return
+        }
+        
+        let targets = realm.objects(LHHouseInfo.self).filter("PAN_ID == %@", panId)
+        
+        do {
+            try realm.write {
+                if !targets.isEmpty {
+                    guard let newHouseInfo = targets.last
+                    else {
+                        completion(false)
+                        return
+                    }
+                    newHouseInfo.isAlarmFlag = isAlarmValue
+                    realm.add(newHouseInfo, update: .all)
+                    completion(true)
+                }
+            }
+            
+        } catch {
+            completion(false)
+        }
+        
+        fetchLHHouseData()
+    }
+    
     
     func fetchLHHouseItem(_ lhHouseModel: LHHouseModel, completion: @escaping(Bool) -> Void) {
         guard let realm = realm else { return }
@@ -142,26 +186,80 @@ class JSWebViewModel: ObservableObject {
     }
     
     func setLHHouseNotiSettingRequest(_ isOn: Bool = true, lhhouseInfo: LHHouseModel) {
-        let client = FirestoreRESTClient()
+        Task {
+            do {
+                if isOn {
+                    try await addCNP(lhhouseInfo.CNP_CD_NM)
+                } else {
+                    try await removeCNP(lhhouseInfo.CNP_CD_NM)
+                }
+            } catch {
+                print("❌ Firestore 업데이트 실패: \(error)")
+            }
+        }
+    }
+    
+    private func addCNP(_ cnpCdNm: String) async throws {
+        // 1. 기존 배열 가져오기
+        var currentList = try await fetchCNPList()
+       
+        // 2. 중복 체크 후 추가
+        guard !currentList.contains(cnpCdNm)
+        else {
+            print("⚠️ 이미 등록된 CNP_CD_NM: \(cnpCdNm)")
+            return
+        }
+        currentList.append(cnpCdNm)
         
-        if isOn {
-            Task {
-                try await client.setDocument(
-                    collection: "users",
-                    documentId: deviceUUID,
-                    fields: [
-                        "CNP_CD_NM" : lhhouseInfo.CNP_CD_NM,
-                    ]
-                    
-                )
-            }
+        // 3. 저장
+        try await FirestoreRESTClient.shared.setDocument(
+            collection: "users",
+            documentId: deviceUUID,
+            fields: [
+                "CNP_CD_NM" : currentList
+            ])
+        
+        Analytics.setUserProperty(cnpCdNm, forName: "CNP_CD_NM_\(LocationUtils.shared.getLocationCode(cnpCdNM: cnpCdNm))")
+        
+        print("✅ CNP_CD_NM 추가 완료: \(currentList)")
+    }
+    
+    private func removeCNP(_ cnpCdNm: String) async throws {
+        // 1. 기존 배열 가져오기
+        var currentList = try await fetchCNPList()
+       
+        // 2. 해당 항목 제거
+        currentList.removeAll { $0 == cnpCdNm }
+        
+        if currentList.isEmpty {
+            try await FirestoreRESTClient.shared.deleteDocument(
+                collection: "users",
+                documentId: deviceUUID
+            )
+            print("✅ 마지막 항목 삭제 → 문서 제거")
         } else {
-            Task {
-                try await client.deleteDocument(
-                    collection: "users",
-                    documentId: deviceUUID
-                )
-            }
+            try await FirestoreRESTClient.shared.setDocument(
+                collection: "users",
+                documentId: deviceUUID,
+                fields: [
+                    "CNP_CD_NM": currentList
+                ]
+            )
+            print("✅ CNP_CD_NM 삭제 완료: \(currentList)")
+            Analytics.setUserProperty(nil, forName: "CNP_CD_NM_\(LocationUtils.shared.getLocationCode(cnpCdNM: cnpCdNm))")
+        }
+    }
+    
+    private func fetchCNPList() async throws -> [String] {
+        do {
+            let doc = try await FirestoreRESTClient.shared.getDocument(
+                collection: "users",
+                documentId: deviceUUID
+            )
+            return doc["CNP_CD_NM"] as? [String] ?? []
+        } catch {
+            print("⚠️ 문서 없음 → 빈 배열로 시작")
+            return []
         }
     }
 }
