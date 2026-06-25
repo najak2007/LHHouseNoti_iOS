@@ -69,7 +69,11 @@ extension NotificationManager: MessagingDelegate {
         Firestore.firestore()
             .collection("users")
             .document(userId)
-            .setData(["fcmToken": token], merge: true) { error in
+            .setData( [
+                "fcmToken": token,
+                "uuid": DeviceIdentifier.shared.getDeviceUUID(),
+                "platform": "i"
+            ], merge: true) { error in
                 if let error = error {
                     print("Firestore 토큰 저장 실패: \(error.localizedDescription)")
                 } else {
