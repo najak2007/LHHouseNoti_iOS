@@ -7,6 +7,13 @@
 
 import Foundation
 
+
+enum HeaderTextAlignment {
+    case 좌측정렬
+    case 가운데정렬
+    case 우측정렬
+}
+
 class Config {
     static let WEEKDAY_TITLE: [String] = ["일", "월", "화", "수", "목", "금", "토"]
     static let APP_START_DATE: Date? = Calendar.current.date(from: DateComponents(year: 2026, month: 7, day: 1))

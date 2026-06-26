@@ -7,6 +7,27 @@
 
 import Foundation
 
+enum LocationName: CaseIterable {
+    case 서울특별시
+    case 부산광역시
+    case 대구광역시
+    case 인천광역시
+    case 광주광역시
+    case 대전광역시
+    case 울산광역시
+    case 세종특별자치시
+    case 경기도
+    case 강원도
+    case 충청북도
+    case 충청남도
+    case 전라북도
+    case 전라남도
+    case 경상북도
+    case 경상남도
+    case 제주특별자치도
+}
+
+
 class LocationUtils {
    static let shared = LocationUtils()
     private init() {}
