@@ -11,6 +11,7 @@ import Combine
 import RealmSwift
 internal import Realm
 import FirebaseAnalytics
+import FirebaseMessaging
 
 
 var expandWebViewCloseHandler = PassthroughSubject<Bool, Never>()
@@ -26,7 +27,7 @@ class JSWebViewModel: ObservableObject {
     @Published var pushedViewDetail: LHHouseModel? = nil
     
     @Published var lhhouseFavorites: [LHHouseInfo] = []
-    @Published var usersInfo: [String: Any] = [:]
+    @Published var usersAlarmiInfo: [String: Any] = [:]
     
     private var notificationToken: NotificationToken?  // 추가
     
@@ -39,6 +40,10 @@ class JSWebViewModel: ObservableObject {
         realm = RealmManager.shared.realm
         
         fetchLHHouseData()
+        
+        Task {
+            _ = try await fetchUserFields()
+        }
     }
     
     // React로 UUID + Token + OSType
@@ -163,13 +168,13 @@ class JSWebViewModel: ObservableObject {
         var editFielsList: [String] = usersNotiDic[fieldKey] as? [String] ?? []
         
         // 3. 중복 체크 후 추가
-        guard !editFielsList.contains(fieldItem)
+        guard !editFielsList.contains(fieldItem.getKey)
         else {
-            print("⚠️ 이미 등록된 \(fieldKey): \(fieldItem)")
+            print("⚠️ 이미 등록된 \(fieldKey): \(fieldItem.getKey)")
             return
         }
         
-        editFielsList.append(fieldItem)
+        editFielsList.append(fieldItem.getKey)
         usersNotiDic.updateValue(editFielsList, forKey: fieldKey)
         
         // 4. 저장
@@ -178,10 +183,17 @@ class JSWebViewModel: ObservableObject {
             documentId: deviceUUID,
             fields: usersNotiDic)
         
-        Analytics.setUserProperty(fieldItem, forName: fieldKey)
+        let topicName = "\(fieldKey.getFirstValue)_\(fieldItem.getValue)"
+            
+        do {
+            // 비동기 대안 함수 호출 (try await 사용)
+            try await Messaging.messaging().subscribe(toTopic: topicName)
+            print("\(topicName) 알림 구독 완료!")
+        } catch {
+            print("구독 실패 오류 발생: \(error.localizedDescription)")
+        }
         
-        usersInfo = usersNotiDic
-        
+        usersAlarmiInfo = usersNotiDic
         print("✅ CNP_CD_NM 추가 완료: \(usersNotiDic)")
     }
     
@@ -196,7 +208,7 @@ class JSWebViewModel: ObservableObject {
         var editFielsList: [String] = usersNotiDic[fieldKey] as? [String] ?? []
        
         // 3. 해당 항목 제거
-        editFielsList.removeAll { $0 == fieldItem }
+        editFielsList.removeAll { $0 == fieldItem.getKey }
 
         if editFielsList.isEmpty {
             usersNotiDic.removeValue(forKey: fieldKey)
@@ -217,10 +229,19 @@ class JSWebViewModel: ObservableObject {
                 fields: usersNotiDic
             )
             print("✅ Users Notices Info 삭제 완료: \(usersNotiDic)")
-            Analytics.setUserProperty(nil, forName: "a")
         }
         
-        usersInfo = usersNotiDic
+        let topicName = "\(fieldKey.getFirstValue)_\(fieldItem.getValue)"
+            
+        do {
+            // 비동기 대안 함수 호출 (try await 사용)
+            try await Messaging.messaging().unsubscribe(fromTopic: topicName)
+            print("\(topicName) 알림 구독 완료!")
+        } catch {
+            print("구독 실패 오류 발생: \(error.localizedDescription)")
+        }
+        
+        usersAlarmiInfo = usersNotiDic
     }
     
     private func fetchUserFields() async throws -> [String: Any]?  {
@@ -229,6 +250,7 @@ class JSWebViewModel: ObservableObject {
                 collection: "users",
                 documentId: deviceUUID
             )
+            usersAlarmiInfo = doc
             return doc
         } catch {
             print("⚠️ Users 컬랙션에 문서 없음")
