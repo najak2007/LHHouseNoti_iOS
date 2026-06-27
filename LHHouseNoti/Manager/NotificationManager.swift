@@ -54,9 +54,13 @@ extension NotificationManager: MessagingDelegate {
         saveTokenToFirestore(token)
     }
 
-    // Firestore에 토큰 저장
     private func saveTokenToFirestore(_ token: String) {
-        // 로그인된 유저가 있을 때만 저장
+        let dataDict: [String: String] = ["token": token]
+        NotificationCenter.default.post(
+            name: NSNotification.Name("FCMTokenReceived"),
+            object: nil,
+            userInfo: dataDict
+        )
         guard let userId = Auth.auth().currentUser?.uid else {
             print("로그인 유저 없음 → 토큰 저장 생략")
             return
@@ -65,7 +69,11 @@ extension NotificationManager: MessagingDelegate {
         Firestore.firestore()
             .collection("users")
             .document(userId)
-            .setData(["fcmToken": token], merge: true) { error in
+            .setData( [
+                "fcmToken": token,
+                "uuid": DeviceIdentifier.shared.getDeviceUUID(),
+                "platform": "i"
+            ], merge: true) { error in
                 if let error = error {
                     print("Firestore 토큰 저장 실패: \(error.localizedDescription)")
                 } else {

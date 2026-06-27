@@ -11,8 +11,11 @@ import Foundation
 struct ExpandWebView: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var jsWebViewModel = JSWebViewModel()
-
+    @State private var isFavorite: Bool = false
+    
+    
     let lhhouseModel: LHHouseModel
+    
     
     var body: some View {
         ZStack {
@@ -40,15 +43,22 @@ struct ExpandWebView: View {
                     Spacer()
                     
                     Button(action: {
-                        print("jsWebViewModel = \(lhhouseModel)")
+                        self.jsWebViewModel.saveLHHouseFavorite(lhhouseModel) { isFavorite in
+                            self.isFavorite = isFavorite
+                        }
                     }, label: {
-                        Image(systemName: "star")
+                        Image(systemName: self.isFavorite == false ? "star" : "star.fill")
                             .resizable()
                             .scaledToFit()
                             .foregroundColor(.black)
                             .frame(width: 24, height: 24)
                     })
                     .padding(.trailing, 20)
+                    .onAppear {
+                        self.jsWebViewModel.fetchLHHouseItem(lhhouseModel) { isFavorite in
+                            self.isFavorite = isFavorite
+                        }
+                    }
                 }
                 
                 
