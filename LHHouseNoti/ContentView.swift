@@ -45,6 +45,13 @@ struct ContentView: View {
                     }
                 }
             }
+            Tab("알림", systemImage: "bell", value: 2) {
+             }
+            
+            Tab("설정", systemImage: "gearshape", value: 3) {
+                AlarmSettingView(viewModel: viewModel)
+
+            }
         }
     }
 }

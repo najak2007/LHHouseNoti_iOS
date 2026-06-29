@@ -11,10 +11,11 @@ import Combine
 import RealmSwift
 internal import Realm
 import FirebaseAnalytics
+import FirebaseMessaging
 
 
 var expandWebViewCloseHandler = PassthroughSubject<Bool, Never>()
-var lhhouseAlarmYNHandler = PassthroughSubject<Bool, Never>()
+var lhhouseAlarmYNHandler = PassthroughSubject<[String: Any], Never>()
 
 class JSWebViewModel: ObservableObject {
     @Published var deviceUUID: String = ""
@@ -26,6 +27,7 @@ class JSWebViewModel: ObservableObject {
     @Published var pushedViewDetail: LHHouseModel? = nil
     
     @Published var lhhouseFavorites: [LHHouseInfo] = []
+    @Published var usersAlarmiInfo: [String: Any] = [:]
     
     private var notificationToken: NotificationToken?  // 추가
     
@@ -38,6 +40,10 @@ class JSWebViewModel: ObservableObject {
         realm = RealmManager.shared.realm
         
         fetchLHHouseData()
+        
+        Task {
+            _ = try await fetchUserFields()
+        }
     }
     
     // React로 UUID + Token + OSType
@@ -124,55 +130,8 @@ class JSWebViewModel: ObservableObject {
         
         // 중요: 여기서 UI가 참조하는 배열이나 뷰모델의 데이터를 완전히 새로고침 해줘야 합니다.
         fetchLHHouseData()
-        setLHHouseNotiSettingRequest(isRegister, lhhouseInfo: lhHouseModel)
         completion(isRegister)
     }
-
-    func setLHHouseNotiSettingRequest(_ isOn: Bool = true, panId: String, cnpCDNM: String, completion: @escaping(Bool) -> Void) {
-        Task {
-            do {
-                if isOn {
-                    try await addCNP(cnpCDNM)
-                } else {
-                    try await removeCNP(cnpCDNM)
-                }
-                lhHouseInfoOfAlarmUpdate(panId: panId, isAlarmValue: isOn, completion: completion)
-            } catch {
-                completion(false)
-            }
-        }
-    }
-    
-    func lhHouseInfoOfAlarmUpdate(panId: String, isAlarmValue: Bool, completion: @escaping(Bool) -> Void) {
-        guard let realm = self.realm
-        else {
-            completion(false)
-            return
-        }
-        
-        let targets = realm.objects(LHHouseInfo.self).filter("PAN_ID == %@", panId)
-        
-        do {
-            try realm.write {
-                if !targets.isEmpty {
-                    guard let newHouseInfo = targets.last
-                    else {
-                        completion(false)
-                        return
-                    }
-                    newHouseInfo.isAlarmFlag = isAlarmValue
-                    realm.add(newHouseInfo)
-                    completion(true)
-                }
-            }
-            
-        } catch {
-            completion(false)
-        }
-        
-        fetchLHHouseData()
-    }
-    
     
     func fetchLHHouseItem(_ lhHouseModel: LHHouseModel, completion: @escaping(Bool) -> Void) {
         guard let realm = realm else { return }
@@ -185,53 +144,79 @@ class JSWebViewModel: ObservableObject {
         completion(lhhouseInfo.isEmpty == false)
     }
     
-    func setLHHouseNotiSettingRequest(_ isOn: Bool = true, lhhouseInfo: LHHouseModel) {
-        Task {
-            do {
-                if isOn {
-                    try await addCNP(lhhouseInfo.CNP_CD_NM)
-                } else {
-                    try await removeCNP(lhhouseInfo.CNP_CD_NM)
-                }
-            } catch {
-                print("❌ Firestore 업데이트 실패: \(error)")
-            }
+    func setUsersNotices(_ isON: Bool, _ fieldKey: String, _ fieldItem: String) async throws {
+        if isON {
+            try await addUsersNotices(fieldKey, fieldItem)
+        } else {
+            try await removeUsersNotices(fieldKey, fieldItem)
         }
+        lhhouseAlarmYNHandler.send([
+            "isON": isON,
+            "fieldKey": fieldItem
+        ])
     }
     
-    private func addCNP(_ cnpCdNm: String) async throws {
-        // 1. 기존 배열 가져오기
-        var currentList = try await fetchCNPList()
-       
-        // 2. 중복 체크 후 추가
-        guard !currentList.contains(cnpCdNm)
+    
+    private func addUsersNotices(_ fieldKey: String, _ fieldItem: String) async throws {
+        // 1. 기존 users 컬랙션 값 가져오기
+        guard var usersNotiDic = try await fetchUserFields()
         else {
-            print("⚠️ 이미 등록된 CNP_CD_NM: \(cnpCdNm)")
             return
         }
-        currentList.append(cnpCdNm)
         
-        // 3. 저장
+        // 2. users 컬랙션에 저장된 fieldKey에 맞는 배열 가져오기
+        var editFielsList: [String] = usersNotiDic[fieldKey] as? [String] ?? []
+        
+        // 3. 중복 체크 후 추가
+        guard !editFielsList.contains(fieldItem.getKey)
+        else {
+            print("⚠️ 이미 등록된 \(fieldKey): \(fieldItem.getKey)")
+            return
+        }
+        
+        editFielsList.append(fieldItem.getKey)
+        usersNotiDic.updateValue(editFielsList, forKey: fieldKey)
+        
+        // 4. 저장
         try await FirestoreRESTClient.shared.setDocument(
             collection: "users",
             documentId: deviceUUID,
-            fields: [
-                "CNP_CD_NM" : currentList
-            ])
+            fields: usersNotiDic)
         
-        Analytics.setUserProperty(cnpCdNm, forName: "CNP_CD_NM_\(LocationUtils.shared.getLocationCode(cnpCdNM: cnpCdNm))")
+        let topicName = "\(fieldKey.getFirstValue)_\(fieldItem.getValue)"
+            
+        do {
+            // 비동기 대안 함수 호출 (try await 사용)
+            try await Messaging.messaging().subscribe(toTopic: topicName)
+            print("\(topicName) 알림 구독 완료!")
+        } catch {
+            print("구독 실패 오류 발생: \(error.localizedDescription)")
+        }
         
-        print("✅ CNP_CD_NM 추가 완료: \(currentList)")
+        usersAlarmiInfo = usersNotiDic
+        print("✅ CNP_CD_NM 추가 완료: \(usersNotiDic)")
     }
     
-    private func removeCNP(_ cnpCdNm: String) async throws {
-        // 1. 기존 배열 가져오기
-        var currentList = try await fetchCNPList()
+    private func removeUsersNotices(_ fieldKey: String, _ fieldItem: String) async throws {
+        // 1. 기존 users 컬랙션 값 가져오기
+        guard var usersNotiDic = try await fetchUserFields()
+        else {
+            return
+        }
+
+        // 2. users 컬랙션에 저장된 fieldKey에 맞는 배열 가져오기
+        var editFielsList: [String] = usersNotiDic[fieldKey] as? [String] ?? []
        
-        // 2. 해당 항목 제거
-        currentList.removeAll { $0 == cnpCdNm }
+        // 3. 해당 항목 제거
+        editFielsList.removeAll { $0 == fieldItem.getKey }
+
+        if editFielsList.isEmpty {
+            usersNotiDic.removeValue(forKey: fieldKey)
+        } else {
+            usersNotiDic.updateValue(editFielsList, forKey: fieldKey)
+        }
         
-        if currentList.isEmpty {
+        if usersNotiDic.isEmpty {
             try await FirestoreRESTClient.shared.deleteDocument(
                 collection: "users",
                 documentId: deviceUUID
@@ -241,25 +226,35 @@ class JSWebViewModel: ObservableObject {
             try await FirestoreRESTClient.shared.setDocument(
                 collection: "users",
                 documentId: deviceUUID,
-                fields: [
-                    "CNP_CD_NM": currentList
-                ]
+                fields: usersNotiDic
             )
-            print("✅ CNP_CD_NM 삭제 완료: \(currentList)")
-            Analytics.setUserProperty(nil, forName: "CNP_CD_NM_\(LocationUtils.shared.getLocationCode(cnpCdNM: cnpCdNm))")
+            print("✅ Users Notices Info 삭제 완료: \(usersNotiDic)")
         }
+        
+        let topicName = "\(fieldKey.getFirstValue)_\(fieldItem.getValue)"
+            
+        do {
+            // 비동기 대안 함수 호출 (try await 사용)
+            try await Messaging.messaging().unsubscribe(fromTopic: topicName)
+            print("\(topicName) 알림 구독 완료!")
+        } catch {
+            print("구독 실패 오류 발생: \(error.localizedDescription)")
+        }
+        
+        usersAlarmiInfo = usersNotiDic
     }
     
-    private func fetchCNPList() async throws -> [String] {
+    private func fetchUserFields() async throws -> [String: Any]?  {
         do {
             let doc = try await FirestoreRESTClient.shared.getDocument(
                 collection: "users",
                 documentId: deviceUUID
             )
-            return doc["CNP_CD_NM"] as? [String] ?? []
+            usersAlarmiInfo = doc
+            return doc
         } catch {
-            print("⚠️ 문서 없음 → 빈 배열로 시작")
-            return []
+            print("⚠️ Users 컬랙션에 문서 없음")
+            return nil
         }
     }
 }

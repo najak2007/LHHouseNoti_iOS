@@ -40,9 +40,8 @@ struct NoticeCardView: View {
                         .foregroundColor(Color(red: 0.18, green: 0.50, blue: 0.93))
                         .cornerRadius(12)
                 }
-                
                 Spacer()
-                
+#if false
                 Button(action: {
                     self.viewModel.setLHHouseNotiSettingRequest(!isAlarmOn, panId: item.PAN_ID, cnpCDNM: item.CNP_CD_NM) { isResult in
                         if isResult {
@@ -59,6 +58,7 @@ struct NoticeCardView: View {
                 .onAppear {
                     isAlarmOn = item.isAlarmFlag
                 }
+#endif
             }
             .padding(.bottom, 8)
             
