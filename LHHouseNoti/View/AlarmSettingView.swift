@@ -75,6 +75,7 @@ struct AlarmSettingView: View {
                     .listRowBackground(Color.white)   // ← 흰색으로 변경
 #endif
 
+#if false
                     Section(header: SectionHeaderView(title: "공고 상태 설정")) {
                         let panSSNames = remoteConfig.panSSNames
                         ForEach(stride(from: 0, to: panSSNames.count, by: 2).map { $0 }, id: \.self) { index in
@@ -133,6 +134,7 @@ struct AlarmSettingView: View {
                     }
                     .listSectionSeparator(.hidden)
                     .listRowBackground(Color.white)
+#endif
                 }
                 .listStyle(InsetGroupedListStyle())
                 .scrollContentBackground(.hidden)     // ← 필수
