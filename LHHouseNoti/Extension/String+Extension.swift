@@ -31,12 +31,23 @@ extension String {
     }
     
     var getKey: String {
-        guard let range = self.range(of: ":") else { return self }
+        guard let range = self.range(of: ":")
+        else {
+            return self
+        }
         return String(self[..<range.lowerBound])
     }
     
     var getValue: String {
-        guard let range = self.range(of: ":") else { return self }
+        guard let range = self.range(of: ":")
+        else {
+            return self
+        }
         return String(self[range.upperBound...])
+    }
+    
+    var getFirstValue: String {
+        let value = self.components(separatedBy: "_").first?.trimmingCharacters(in: .whitespacesAndNewlines)
+        return value ?? self
     }
 }

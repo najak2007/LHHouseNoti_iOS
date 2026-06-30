@@ -32,7 +32,7 @@ struct AlarmSettingView: View {
                         let locations = remoteConfig.locationNames
                         ForEach(stride(from: 0, to: locations.count, by: 2).map { $0 }, id: \.self) { index in
                             HStack(spacing: 8) {
-                                ListRowView(viewModel: viewModel, label: "\(locations[index])".getKey) { isOn, fieldItem in
+                                ListRowView(viewModel: viewModel, fieldKey: "CNP_CD_NM", label: "\(locations[index])") { isOn, fieldItem in
                                     Task {
                                         try await viewModel.setUsersNotices(isOn, "CNP_CD_NM", fieldItem)
                                     }
@@ -40,7 +40,7 @@ struct AlarmSettingView: View {
                                     .frame(maxWidth: .infinity)
                                 
                                 if index + 1 < locations.count {
-                                    ListRowView(viewModel: viewModel, label: "\(locations[index + 1])".getKey) { isOn, fieldItem in
+                                    ListRowView(viewModel: viewModel, fieldKey: "CNP_CD_NM", label: "\(locations[index + 1])") { isOn, fieldItem in
                                         Task {
                                             try await viewModel.setUsersNotices(isOn, "CNP_CD_NM", fieldItem)
                                         }
@@ -79,14 +79,14 @@ struct AlarmSettingView: View {
                         let panSSNames = remoteConfig.panSSNames
                         ForEach(stride(from: 0, to: panSSNames.count, by: 2).map { $0 }, id: \.self) { index in
                             HStack(spacing: 8) {
-                                ListRowView(viewModel: viewModel, label: "\(panSSNames[index])".getKey, onColor: Color(red: 0.13, green: 0.59, blue: 0.33)) { isOn, fieldItem in
+                                ListRowView(viewModel: viewModel, fieldKey: "PAN_SS", label: "\(panSSNames[index])", onColor: Color(red: 0.13, green: 0.59, blue: 0.33)) { isOn, fieldItem in
                                     Task {
                                         try await viewModel.setUsersNotices(isOn, "PAN_SS", fieldItem)
                                     }
                                 }
                                     .frame(maxWidth: .infinity)
                                 if index + 1 < panSSNames.count {
-                                    ListRowView(viewModel: viewModel, label: "\(panSSNames[index + 1])".getKey, onColor: Color(red: 0.13, green: 0.59, blue: 0.33)) { isOn, fieldItem in
+                                    ListRowView(viewModel: viewModel, fieldKey: "PAN_SS", label: "\(panSSNames[index + 1])", onColor: Color(red: 0.13, green: 0.59, blue: 0.33)) { isOn, fieldItem in
                                         Task {
                                             try await viewModel.setUsersNotices(isOn, "PAN_SS", fieldItem)
                                         }
@@ -109,14 +109,14 @@ struct AlarmSettingView: View {
                         
                         ForEach(stride(from: 0, to: uppaistpcdNames.count, by: 2).map { $0 }, id: \.self) { index in
                             HStack(spacing: 8) {
-                                ListRowView(viewModel: viewModel, label: "\(uppaistpcdNames[index])".getKey, onColor: .black) { isOn, fieldItem in
+                                ListRowView(viewModel: viewModel, fieldKey: "UPP_AIS_TP_CD", label: "\(uppaistpcdNames[index])", onColor: .black) { isOn, fieldItem in
                                     Task {
                                         try await viewModel.setUsersNotices(isOn, "UPP_AIS_TP_CD", fieldItem)
                                     }
                                 }
                                     .frame(maxWidth: .infinity)
                                 if index + 1 < uppaistpcdNames.count {
-                                    ListRowView(viewModel: viewModel, label: "\(uppaistpcdNames[index + 1])".getKey, onColor: .black) { isOn, fieldItem in
+                                    ListRowView(viewModel: viewModel, fieldKey: "UPP_AIS_TP_CD", label: "\(uppaistpcdNames[index + 1])", onColor: .black) { isOn, fieldItem in
                                         Task {
                                             try await viewModel.setUsersNotices(isOn, "UPP_AIS_TP_CD", fieldItem)
                                         }
@@ -137,6 +137,7 @@ struct AlarmSettingView: View {
                 .listStyle(InsetGroupedListStyle())
                 .scrollContentBackground(.hidden)     // ← 필수
                 .background(Color.white)
+
             }
         }
     }
