@@ -38,14 +38,8 @@ struct ListRowView: View {
                 .scaleEffect(0.8)
                 .frame(width: 44)
                 .onChange(of: isTurnedOn) { oldValue, newValue in
-                    if isAppearTurnedOn && newValue {
-                        isAppearTurnedOn = false
-                        return
-                    }
                     onSelectHandler?(newValue, label)
-                    isAppearTurnedOn = false
                 }
-
         }
         .padding(10)
         .onReceive(lhhouseAlarmYNHandler) { receiveInfo in
@@ -61,7 +55,6 @@ struct ListRowView: View {
             else {
                 return
             }
-            isAppearTurnedOn = true
             if let _ = editFielsList.firstIndex(where: { $0 == label.getKey }) {
                 isTurnedOn = true
             } else {
