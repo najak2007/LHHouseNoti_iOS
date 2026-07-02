@@ -128,7 +128,6 @@ class JSWebViewModel: ObservableObject {
             return
         }
         
-        // 중요: 여기서 UI가 참조하는 배열이나 뷰모델의 데이터를 완전히 새로고침 해줘야 합니다.
         fetchLHHouseData()
         completion(isRegister)
     }
