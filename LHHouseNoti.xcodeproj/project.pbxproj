@@ -19,11 +19,33 @@
 		7A2F4DEE2FEBF5A7002EA8B2 /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = 7A2F4DED2FEBF5A7002EA8B2 /* FirebaseStorage */; };
 		7A2F4DF12FEBF6E9002EA8B2 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 7A2F4DF02FEBF6E9002EA8B2 /* FirebaseCore */; };
 		7A2F4DF32FEBFB07002EA8B2 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 7A2F4DF22FEBFB07002EA8B2 /* FirebaseAuth */; };
+		7A6249632FF689A5005140DB /* MessageService.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 7A62495C2FF689A5005140DB /* MessageService.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		7AFA640A2FE56E1900E5D403 /* RealmSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 7AFA64092FE56E1900E5D403 /* RealmSwift */; };
 		7AFA640B2FE56E6A00E5D403 /* RealmSwift in Embed Frameworks */ = {isa = PBXBuildFile; productRef = 7AFA64092FE56E1900E5D403 /* RealmSwift */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		7A6249612FF689A5005140DB /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 891C67402FDAAE8A00FD3EAE /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 7A62495B2FF689A5005140DB;
+			remoteInfo = MessageService;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXCopyFilesBuildPhase section */
+		7A6249642FF689A5005140DB /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				7A6249632FF689A5005140DB /* MessageService.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		7AFA640C2FE56E6A00E5D403 /* Embed Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -38,10 +60,18 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		7A62495C2FF689A5005140DB /* MessageService.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MessageService.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		891C67482FDAAE8A00FD3EAE /* LHHouseNoti.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LHHouseNoti.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		7A6249682FF689A5005140DB /* Exceptions for "MessageService" folder in "MessageService" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 7A62495B2FF689A5005140DB /* MessageService */;
+		};
 		89F294902FDB81C90013A804 /* Exceptions for "LHHouseNoti" folder in "LHHouseNoti" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -52,6 +82,14 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		7A62495D2FF689A5005140DB /* MessageService */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				7A6249682FF689A5005140DB /* Exceptions for "MessageService" folder in "MessageService" target */,
+			);
+			path = MessageService;
+			sourceTree = "<group>";
+		};
 		891C674A2FDAAE8A00FD3EAE /* LHHouseNoti */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -63,6 +101,13 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		7A6249592FF689A5005140DB /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		891C67452FDAAE8A00FD3EAE /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -97,6 +142,7 @@
 			isa = PBXGroup;
 			children = (
 				891C674A2FDAAE8A00FD3EAE /* LHHouseNoti */,
+				7A62495D2FF689A5005140DB /* MessageService */,
 				7A2F4DEF2FEBF6E9002EA8B2 /* Frameworks */,
 				891C67492FDAAE8A00FD3EAE /* Products */,
 			);
@@ -106,6 +152,7 @@
 			isa = PBXGroup;
 			children = (
 				891C67482FDAAE8A00FD3EAE /* LHHouseNoti.app */,
+				7A62495C2FF689A5005140DB /* MessageService.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -113,6 +160,28 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		7A62495B2FF689A5005140DB /* MessageService */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7A6249672FF689A5005140DB /* Build configuration list for PBXNativeTarget "MessageService" */;
+			buildPhases = (
+				7A6249582FF689A5005140DB /* Sources */,
+				7A6249592FF689A5005140DB /* Frameworks */,
+				7A62495A2FF689A5005140DB /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				7A62495D2FF689A5005140DB /* MessageService */,
+			);
+			name = MessageService;
+			packageProductDependencies = (
+			);
+			productName = MessageService;
+			productReference = 7A62495C2FF689A5005140DB /* MessageService.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		891C67472FDAAE8A00FD3EAE /* LHHouseNoti */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 891C67532FDAAE8C00FD3EAE /* Build configuration list for PBXNativeTarget "LHHouseNoti" */;
@@ -121,10 +190,12 @@
 				891C67452FDAAE8A00FD3EAE /* Frameworks */,
 				891C67462FDAAE8A00FD3EAE /* Resources */,
 				7AFA640C2FE56E6A00E5D403 /* Embed Frameworks */,
+				7A6249642FF689A5005140DB /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				7A6249622FF689A5005140DB /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				891C674A2FDAAE8A00FD3EAE /* LHHouseNoti */,
@@ -156,9 +227,12 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 2650;
+				LastSwiftUpdateCheck = 2660;
 				LastUpgradeCheck = 2650;
 				TargetAttributes = {
+					7A62495B2FF689A5005140DB = {
+						CreatedOnToolsVersion = 26.6;
+					};
 					891C67472FDAAE8A00FD3EAE = {
 						CreatedOnToolsVersion = 26.5;
 					};
@@ -183,11 +257,19 @@
 			projectRoot = "";
 			targets = (
 				891C67472FDAAE8A00FD3EAE /* LHHouseNoti */,
+				7A62495B2FF689A5005140DB /* MessageService */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		7A62495A2FF689A5005140DB /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		891C67462FDAAE8A00FD3EAE /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -198,6 +280,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		7A6249582FF689A5005140DB /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		891C67442FDAAE8A00FD3EAE /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -207,7 +296,81 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		7A6249622FF689A5005140DB /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 7A62495B2FF689A5005140DB /* MessageService */;
+			targetProxy = 7A6249612FF689A5005140DB /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		7A6249652FF689A5005140DB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "Apple Development";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = AU6LM48MPU;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = MessageService/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = MessageService;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.sooyeon.lhhousenoti.MessageService;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "LH분양알리미_메시지확장_20260702";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		7A6249662FF689A5005140DB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "Apple Development";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = AU6LM48MPU;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = MessageService/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = MessageService;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.sooyeon.lhhousenoti.MessageService;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "LH분양알리미_메시지확장_20260702";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		891C67512FDAAE8C00FD3EAE /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -416,6 +579,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		7A6249672FF689A5005140DB /* Build configuration list for PBXNativeTarget "MessageService" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7A6249652FF689A5005140DB /* Debug */,
+				7A6249662FF689A5005140DB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		891C67432FDAAE8A00FD3EAE /* Build configuration list for PBXProject "LHHouseNoti" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
