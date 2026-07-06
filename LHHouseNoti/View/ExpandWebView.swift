@@ -13,9 +13,7 @@ struct ExpandWebView: View {
     @StateObject private var jsWebViewModel = JSWebViewModel()
     @State private var isFavorite: Bool = false
     
-    
     let lhhouseModel: LHHouseModel
-    
     
     var body: some View {
         ZStack {

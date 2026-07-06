@@ -162,7 +162,7 @@ extension NotificationManager: MessagingDelegate {
             .collection("users")
             .document(DeviceIdentifier.shared.getDeviceUUID())
             .getDocument { snapshot, error in
-                if let error = error {
+                if error != nil {
                     completion(nil)
                     return
                 }

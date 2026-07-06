@@ -50,6 +50,19 @@ struct ContentView: View {
                             }
                     }
                 }
+                Tab("알림", systemImage: "bell", value: 2) {
+                    NavigationStack {
+                        AlarmReceiveView(viewModel: viewModel)
+                            .navigationDestination(item: $viewModel.pushedViewDetail) { lhhouseModel in
+                                if URL(string: lhhouseModel.DTL_URL) != nil {
+                                    
+                                    ExpandWebView(lhhouseModel: lhhouseModel)
+                                        .toolbar(.hidden, for: .tabBar) // 푸시될 때 하단 탭 숨김
+                                }
+                            }
+                    }
+                }
+                .badge(viewModel.lhhouseAlarms.count)
                 Tab("설정", systemImage: "gearshape", value: 3) {
                     AlarmSettingView(viewModel: viewModel)
                     

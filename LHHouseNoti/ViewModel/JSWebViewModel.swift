@@ -27,6 +27,7 @@ class JSWebViewModel: ObservableObject {
     @Published var pushedViewDetail: LHHouseModel? = nil
     
     @Published var lhhouseFavorites: [LHHouseInfo] = []
+    @Published var lhhouseAlarms: [LHHouseInfo] = []
     @Published var usersAlarmiInfo: [String: Any] = [:]
     
     private var notificationToken: NotificationToken?  // 추가
@@ -89,7 +90,8 @@ class JSWebViewModel: ObservableObject {
             switch changes {
             case .initial(let results), .update(let results, _, _, _):
                 DispatchQueue.main.async {
-                    self.lhhouseFavorites = Array(results)
+                    self.lhhouseFavorites = Array(results).filter { $0.isFavorite }
+                    self.lhhouseAlarms = Array(results).filter { $0.isAlarmFlag }
                 }
             case .error(let error):
                 print("Realm observe 에러: \(error)")
@@ -99,6 +101,27 @@ class JSWebViewModel: ObservableObject {
 
     deinit {
         notificationToken?.invalidate()  // 추가
+    }
+    
+    func setLHHouseAlarmReadStatus(_ lhHouseModel: LHHouseModel, isRead: Bool = true, completion: @escaping() -> Void) {
+        guard let realm = self.realm
+        else {
+            return
+        }
+        
+        let targets = realm.objects(LHHouseInfo.self).filter("PAN_ID == %@", lhHouseModel.PAN_ID)
+        do {
+            try realm.write {
+                if let targetInfo = targets.first {
+                    let newHouseInfo = LHHouseInfo(lhHouseModel, isFavorite: targetInfo.isFavorite, isAlarmFlag: isRead)
+                    realm.add(newHouseInfo, update: .all)
+                }
+            }
+        } catch {
+            print("error: \(error)")
+        }
+        fetchLHHouseData()
+        completion()
     }
     
     func saveLHHouseFavorite(_ lhHouseModel: LHHouseModel, completion: @escaping(Bool) -> Void) {
@@ -113,13 +136,17 @@ class JSWebViewModel: ObservableObject {
         do {
             try realm.write {
                 if targets.isEmpty {
-                    let newHouseInfo = LHHouseInfo(lhHouseModel)
+                    let newHouseInfo = LHHouseInfo(lhHouseModel, isFavorite: true)
                     realm.add(newHouseInfo)
                     isRegister = true
                 } else {
-                    // Realm의 Results 타입을 그대로 delete에 전달하여 안전하게 삭제
-                    realm.delete(targets)
-                    isRegister = false
+                    if let targetInfo = targets.first {
+                        isRegister = !targetInfo.isFavorite
+                        let newHouseInfo = LHHouseInfo(lhHouseModel, isFavorite: isRegister, isAlarmFlag: targetInfo.isAlarmFlag)
+                        realm.add(newHouseInfo, update: .all)
+                    } else {
+                        isRegister = false
+                    }
                 }
             }
         } catch {
@@ -135,12 +162,14 @@ class JSWebViewModel: ObservableObject {
     func fetchLHHouseItem(_ lhHouseModel: LHHouseModel, completion: @escaping(Bool) -> Void) {
         guard let realm = realm else { return }
         let results = realm.objects(LHHouseInfo.self)
-        let lhhouseInfo = results.filter( { $0.PAN_ID == lhHouseModel.PAN_ID } )
+        let lhhouseInfoArr = results.filter( { $0.PAN_ID == lhHouseModel.PAN_ID } )
         
-        print("PAN_IO: \(lhHouseModel.PAN_ID), CNP_CD_NM: \(lhHouseModel.CNP_CD_NM), PAN_SS : \(lhHouseModel.PAN_SS), AIS_TP_CD_NM: \(lhHouseModel.AIS_TP_CD_NM), UPP_AIS_TP_CD: \(lhHouseModel.UPP_AIS_TP_CD), PAN_NT_ST_DT : \(lhHouseModel.PAN_NT_ST_DT), CLSG_DT: \(lhHouseModel.CLSG_DT)")
+        guard let lhhouseInfo = lhhouseInfoArr.first else {
+            completion(false)
+            return
+        }
         
-        
-        completion(lhhouseInfo.isEmpty == false)
+        completion(lhhouseInfoArr.isEmpty == false && lhhouseInfo.isFavorite == true)
     }
     
     func setUsersNotices(_ isON: Bool, _ fieldKey: String, _ fieldItem: String) async throws {
