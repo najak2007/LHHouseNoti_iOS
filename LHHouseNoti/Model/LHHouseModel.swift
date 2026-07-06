@@ -10,7 +10,8 @@ import RealmSwift
 internal import Realm
 
 final class LHHouseInfo: Object, Comparable, Identifiable {
-    @Persisted dynamic var id: String = Date().getDateID()
+    @Persisted dynamic var  id: String = Date().getDateID()
+    @Persisted dynamic var  isFavorite: Bool = false
     @Persisted dynamic var  DTL_URL: String = ""
     @Persisted dynamic var  title: String = ""
     @Persisted dynamic var  PAN_ID: String = ""
@@ -21,15 +22,20 @@ final class LHHouseInfo: Object, Comparable, Identifiable {
     @Persisted dynamic var  UPP_AIS_TP_CD: String = ""
     @Persisted dynamic var  PAN_NT_ST_DT: String = ""
     @Persisted dynamic var  CLSG_DT: String = ""
-    @Persisted dynamic var registerDate: Date = Date()
-    @Persisted dynamic var isAlarmFlag: Bool = true
+    @Persisted dynamic var  registerDate: Date = Date()
+    @Persisted dynamic var  isAlarmFlag: Bool = false
     
     override init() {
         super.init()
     }
     
-    init(DTL_URL: String = "", title: String = "", PAN_ID: String = "", CNP_CD_NM: String = "", PAN_SS: String = "", PAN_NM: String = "", AIS_TP_CD_NM: String = "", PAN_NT_ST_DT: String = "", CLSG_DT: String = "", isAlarmFlag: Bool = true) {
+    nonisolated override static func primaryKey() -> String? {
+        return "PAN_ID"
+    }
+    
+    init(DTL_URL: String = "", isFavorite: Bool = false, title: String = "", PAN_ID: String = "", CNP_CD_NM: String = "", PAN_SS: String = "", PAN_NM: String = "", AIS_TP_CD_NM: String = "", PAN_NT_ST_DT: String = "", CLSG_DT: String = "", isAlarmFlag: Bool = false) {
         self.DTL_URL = DTL_URL
+        self.isFavorite = isFavorite
         self.title = title
         self.PAN_ID = PAN_ID
         self.CNP_CD_NM = CNP_CD_NM
@@ -41,7 +47,7 @@ final class LHHouseInfo: Object, Comparable, Identifiable {
         self.isAlarmFlag = isAlarmFlag
     }
     
-    init(_ lhHouseModel: LHHouseModel) {
+    init(_ lhHouseModel: LHHouseModel, isFavorite: Bool = false, isAlarmFlag: Bool = false) {
         self.DTL_URL = lhHouseModel.DTL_URL
         self.title = lhHouseModel.title
         self.PAN_ID = lhHouseModel.PAN_ID
@@ -51,6 +57,8 @@ final class LHHouseInfo: Object, Comparable, Identifiable {
         self.AIS_TP_CD_NM = lhHouseModel.AIS_TP_CD_NM
         self.PAN_NT_ST_DT = lhHouseModel.PAN_NT_ST_DT
         self.CLSG_DT = lhHouseModel.CLSG_DT
+        self.isFavorite = isFavorite
+        self.isAlarmFlag = isAlarmFlag
     }
     
     static func < (lhs: LHHouseInfo, rhs: LHHouseInfo) -> Bool {
