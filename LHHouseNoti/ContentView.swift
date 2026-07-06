@@ -55,6 +55,7 @@ struct ContentView: View {
                         AlarmReceiveView(viewModel: viewModel)
                             .navigationDestination(item: $viewModel.pushedViewDetail) { lhhouseModel in
                                 if URL(string: lhhouseModel.DTL_URL) != nil {
+                                    
                                     ExpandWebView(lhhouseModel: lhhouseModel)
                                         .toolbar(.hidden, for: .tabBar) // 푸시될 때 하단 탭 숨김
                                 }

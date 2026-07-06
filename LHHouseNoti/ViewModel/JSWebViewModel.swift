@@ -103,6 +103,27 @@ class JSWebViewModel: ObservableObject {
         notificationToken?.invalidate()  // 추가
     }
     
+    func setLHHouseAlarmReadStatus(_ lhHouseModel: LHHouseModel, isRead: Bool = true, completion: @escaping() -> Void) {
+        guard let realm = self.realm
+        else {
+            return
+        }
+        
+        let targets = realm.objects(LHHouseInfo.self).filter("PAN_ID == %@", lhHouseModel.PAN_ID)
+        do {
+            try realm.write {
+                if let targetInfo = targets.first {
+                    let newHouseInfo = LHHouseInfo(lhHouseModel, isFavorite: targetInfo.isFavorite, isAlarmFlag: isRead)
+                    realm.add(newHouseInfo, update: .all)
+                }
+            }
+        } catch {
+            print("error: \(error)")
+        }
+        fetchLHHouseData()
+        completion()
+    }
+    
     func saveLHHouseFavorite(_ lhHouseModel: LHHouseModel, completion: @escaping(Bool) -> Void) {
         guard let realm = self.realm else {
             completion(false)
