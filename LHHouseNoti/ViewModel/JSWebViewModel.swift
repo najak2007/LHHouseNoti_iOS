@@ -92,6 +92,7 @@ class JSWebViewModel: ObservableObject {
                 DispatchQueue.main.async {
                     self.lhhouseFavorites = Array(results).filter { $0.isFavorite }
                     self.lhhouseAlarms = Array(results).filter { $0.isAlarmFlag }
+                    UNUserNotificationCenter.current().setBadgeCount(self.lhhouseAlarms.count)
                 }
             case .error(let error):
                 print("Realm observe 에러: \(error)")
