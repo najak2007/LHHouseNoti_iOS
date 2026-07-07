@@ -12,6 +12,9 @@ class NotificationService: UNNotificationServiceExtension {
 
     var contentHandler: ((UNNotificationContent) -> Void)?
     var bestAttemptContent: UNMutableNotificationContent?
+    
+    private let appGroupID = "group.com.sooyean"
+    private let badgeCountKey = "badgeCount"
 
     override func didReceive(_ request: UNNotificationRequest, withContentHandler contentHandler: @escaping (UNNotificationContent) -> Void) {
         self.contentHandler = contentHandler
@@ -22,10 +25,11 @@ class NotificationService: UNNotificationServiceExtension {
             return
         }
         
-        saveToRealm(userInfo: request.content.userInfo)
+        let newBadgeCount = saveToRealm(userInfo: request.content.userInfo)
+
+        bestAttemptContent.badge = NSNumber(value: newBadgeCount)
         
         contentHandler(bestAttemptContent)
-        
     }
     
     override func serviceExtensionTimeWillExpire() {
@@ -36,18 +40,19 @@ class NotificationService: UNNotificationServiceExtension {
         }
     }
 
-    private func saveToRealm(userInfo: [AnyHashable: Any]) {
+    private func saveToRealm(userInfo: [AnyHashable: Any]) -> Int {
         guard let panId = userInfo["panId"] as? String, !panId.isEmpty
         else {
-            return
+            return 0
         }
         
         let type = userInfo["type"] as? String ?? "new_notice"
         
         do {
             let realm = RealmManager.shared.realm
-            
+
             let targets = realm.objects(LHHouseInfo.self).filter("PAN_ID == %@", panId)
+            var badgeCount: Int = realm.objects(LHHouseInfo.self).filter("isAlarmFlag == true").count
             
             try realm.write {
                 if !targets.isEmpty, let existing = targets.first {
@@ -76,11 +81,16 @@ class NotificationService: UNNotificationServiceExtension {
                     )
                     info.UPP_AIS_TP_CD = userInfo["uppAisTpCd"] as? String ?? ""
                     realm.add(info)
+                    badgeCount = realm.objects(LHHouseInfo.self).filter("isAlarmFlag == true").count
+                    
                 }
+                return badgeCount
             }
             print("✅ Realm 저장 완료 (\(type)): \(panId)")
         } catch {
             print("❌ Realm write error in extension: \(error)")
+            return 0
         }
+        return 0
     }
 }
