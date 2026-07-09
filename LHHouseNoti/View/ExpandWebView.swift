@@ -14,6 +14,7 @@ struct ExpandWebView: View {
     @State private var isFavorite: Bool = false
     
     let lhhouseModel: LHHouseModel
+    var isAlarmReaded: Bool = false
     
     var body: some View {
         ZStack {
@@ -80,5 +81,15 @@ struct ExpandWebView: View {
             }
         }
         .navigationBarBackButtonHidden(true)
+        .onAppear {
+            if isAlarmReaded {
+                setAlarmReadStatusChange(lhhouseModel: lhhouseModel, isReadStatus: false)
+            }
+        }
+    }
+    
+    private func setAlarmReadStatusChange(lhhouseModel: LHHouseModel, isReadStatus: Bool = false) {
+        jsWebViewModel.setLHHouseAlarmReadStatus(lhhouseModel, isRead: isReadStatus) {
+        }
     }
 }
