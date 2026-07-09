@@ -39,9 +39,7 @@ struct AlarmReceiveView: View {
                         VStack(spacing: 10) {
                             ForEach(viewModel.lhhouseAlarms, id: \.PAN_ID) { item in
                                 Button {
-                                    viewModel.setLHHouseAlarmReadStatus(item.lhhouseModel, isRead: false) {
-                                        viewModel.pushedViewDetail = item.lhhouseModel
-                                    }
+                                    viewModel.pushedViewDetail = item.lhhouseModel
                                 } label: {
                                     NoticeCardView(viewModel: viewModel, item: item)
                                 }

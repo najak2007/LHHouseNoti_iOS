@@ -30,11 +30,6 @@ class AppDelegate: NSObject, UIApplicationDelegate {
                 application.registerForRemoteNotifications()
             }
         }
-        
-        if let remoteNotification = launchOptions?[.remoteNotification] as? [AnyHashable: Any] {
-            NotificationRouter.shared.route(from: remoteNotification)
-        }
-        
         return true
     }
     
