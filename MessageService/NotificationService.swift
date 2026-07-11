@@ -12,6 +12,9 @@ class NotificationService: UNNotificationServiceExtension {
 
     var contentHandler: ((UNNotificationContent) -> Void)?
     var bestAttemptContent: UNMutableNotificationContent?
+    
+    private let appGroupID = "group.com.sooyean"
+    private let badgeCountKey = "badgeCount"
 
     override func didReceive(_ request: UNNotificationRequest, withContentHandler contentHandler: @escaping (UNNotificationContent) -> Void) {
         self.contentHandler = contentHandler
@@ -22,10 +25,12 @@ class NotificationService: UNNotificationServiceExtension {
             return
         }
         
-        saveToRealm(userInfo: request.content.userInfo)
-        
-        contentHandler(bestAttemptContent)
-        
+        saveToRealm(userInfo: request.content.userInfo) {
+            self.getBadgeCount { newBadgeCount in
+                bestAttemptContent.badge = NSNumber(value: newBadgeCount)
+                contentHandler(bestAttemptContent)
+            }
+        }
     }
     
     override func serviceExtensionTimeWillExpire() {
@@ -36,9 +41,16 @@ class NotificationService: UNNotificationServiceExtension {
         }
     }
 
-    private func saveToRealm(userInfo: [AnyHashable: Any]) {
+    private func getBadgeCount(completion: @escaping(Int) -> Void) {
+        let realm = RealmManager.shared.realm
+        let badgeCount: Int = realm.objects(LHHouseInfo.self).filter("isAlarmFlag == true").count
+        completion(badgeCount)
+    }
+    
+    private func saveToRealm(userInfo: [AnyHashable: Any], completion: @escaping() -> Void) {
         guard let panId = userInfo["panId"] as? String, !panId.isEmpty
         else {
+            completion()
             return
         }
         
@@ -46,7 +58,6 @@ class NotificationService: UNNotificationServiceExtension {
         
         do {
             let realm = RealmManager.shared.realm
-            
             let targets = realm.objects(LHHouseInfo.self).filter("PAN_ID == %@", panId)
             
             try realm.write {
@@ -60,6 +71,7 @@ class NotificationService: UNNotificationServiceExtension {
                     existing.AIS_TP_CD_NM = userInfo["aisTpCdNm"] as? String ?? existing.AIS_TP_CD_NM
                     existing.UPP_AIS_TP_CD = userInfo["uppAisTpCd"] as? String ?? existing.UPP_AIS_TP_CD
                     existing.DTL_URL = userInfo["dtlUrl"] as? String ?? existing.DTL_URL
+                    completion()
                 } else {
                     let info = LHHouseInfo(
                         DTL_URL: userInfo["dtlUrl"] as? String ?? "",
@@ -76,11 +88,13 @@ class NotificationService: UNNotificationServiceExtension {
                     )
                     info.UPP_AIS_TP_CD = userInfo["uppAisTpCd"] as? String ?? ""
                     realm.add(info)
+                    completion()
                 }
             }
             print("✅ Realm 저장 완료 (\(type)): \(panId)")
         } catch {
             print("❌ Realm write error in extension: \(error)")
+            return completion()
         }
     }
 }

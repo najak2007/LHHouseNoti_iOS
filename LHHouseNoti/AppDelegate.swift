@@ -30,7 +30,6 @@ class AppDelegate: NSObject, UIApplicationDelegate {
                 application.registerForRemoteNotifications()
             }
         }
-        
         return true
     }
     

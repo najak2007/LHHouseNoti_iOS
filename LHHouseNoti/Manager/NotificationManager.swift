@@ -162,7 +162,7 @@ extension NotificationManager: MessagingDelegate {
             .collection("users")
             .document(DeviceIdentifier.shared.getDeviceUUID())
             .getDocument { snapshot, error in
-                if let error = error {
+                if error != nil {
                     completion(nil)
                     return
                 }
@@ -187,7 +187,6 @@ extension NotificationManager: UNUserNotificationCenterDelegate {
                                  willPresent notification: UNNotification,
                                  withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
         let userInfo = notification.request.content.userInfo
-        print("포그라운드 알림 수신: \(userInfo)")
         completionHandler([.banner, .sound, .badge])
     }
 
@@ -196,6 +195,16 @@ extension NotificationManager: UNUserNotificationCenterDelegate {
                                  didReceive response: UNNotificationResponse,
                                  withCompletionHandler completionHandler: @escaping () -> Void) {
         let userInfo = response.notification.request.content.userInfo
+
+        PendingPushNavigation.payload = userInfo
+        
+        NotificationCenter.default.post(
+            name: NSNotification.Name(Config.PUSH_NOTIFICATION_SELECTED_ID),
+            object: nil,
+            userInfo: userInfo
+        )
+
+
         print("알림 탭: \(userInfo)")
         completionHandler()
     }

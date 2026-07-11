@@ -92,6 +92,7 @@ class JSWebViewModel: ObservableObject {
                 DispatchQueue.main.async {
                     self.lhhouseFavorites = Array(results).filter { $0.isFavorite }
                     self.lhhouseAlarms = Array(results).filter { $0.isAlarmFlag }
+                    UNUserNotificationCenter.current().setBadgeCount(self.lhhouseAlarms.count)
                 }
             case .error(let error):
                 print("Realm observe 에러: \(error)")
@@ -101,6 +102,65 @@ class JSWebViewModel: ObservableObject {
 
     deinit {
         notificationToken?.invalidate()  // 추가
+    }
+    
+    func setLHHouseAlarmReadStatus(_ lhHouseModel: LHHouseModel, isRead: Bool = true, completion: @escaping() -> Void) {
+        guard let realm = self.realm
+        else {
+            return
+        }
+        
+        let targets = realm.objects(LHHouseInfo.self).filter("PAN_ID == %@", lhHouseModel.PAN_ID)
+        do {
+            try realm.write {
+                if let targetInfo = targets.first {
+                    let newHouseInfo = LHHouseInfo(lhHouseModel, isFavorite: targetInfo.isFavorite, isAlarmFlag: isRead)
+                    realm.add(newHouseInfo, update: .all)
+                }
+            }
+        } catch {
+            print("error: \(error)")
+        }
+        fetchLHHouseData()
+        completion()
+    }
+    
+    func fetchLHHouseForPanId(userInfo: [AnyHashable: Any], completion: @escaping(LHHouseModel?) -> Void) {
+        guard let panId = userInfo["panId"] as? String, !panId.isEmpty
+        else {
+            completion(nil)
+            return
+        }
+        
+        if let lhHouseModel = realm?.objects(LHHouseInfo.self).filter("PAN_ID == %@", panId).first?.lhhouseModel {
+            completion(lhHouseModel)
+            return
+        }
+        
+        do {
+            if let realm = self.realm {
+                try realm.write {
+                    let lhHouseInfo = LHHouseInfo(
+                        DTL_URL: userInfo["dtlUrl"] as? String ?? "",
+                        isFavorite: false,
+                        title: userInfo["panNm"] as? String ?? "", // title 필드는 payload에 없어 PAN_NM으로 대체
+                        PAN_ID: panId,
+                        CNP_CD_NM: userInfo["cnpCdNm"] as? String ?? "",
+                        PAN_SS: userInfo["panSs"] as? String ?? "",
+                        PAN_NM: userInfo["panNm"] as? String ?? "",
+                        AIS_TP_CD_NM: userInfo["aisTpCdNm"] as? String ?? "",
+                        PAN_NT_ST_DT: userInfo["panNtStDt"] as? String ?? "",
+                        CLSG_DT: userInfo["panClsgDT"] as? String ?? "",
+                        isAlarmFlag: true
+                    )
+                    lhHouseInfo.UPP_AIS_TP_CD = userInfo["uppAisTpCd"] as? String ?? ""
+                    realm.add(lhHouseInfo)
+                    completion(lhHouseInfo.lhhouseModel)
+                }
+            }
+        } catch {
+            return completion(nil)
+        }
     }
     
     func saveLHHouseFavorite(_ lhHouseModel: LHHouseModel, completion: @escaping(Bool) -> Void) {
@@ -262,6 +322,22 @@ class JSWebViewModel: ObservableObject {
         } catch {
             print("⚠️ Users 컬랙션에 문서 없음")
             return nil
+        }
+    }
+}
+
+
+extension JSWebViewModel {
+    func handlePushNavigation(userInfo: [AnyHashable: Any], completion: @escaping (LHHouseModel?) -> Void) {
+        guard let dtlUrl = userInfo["dtlUrl"] as? String,
+              let panId = userInfo["panId"] as? String
+        else {
+            completion(nil)
+            return
+        }
+        
+        fetchLHHouseForPanId(userInfo: userInfo) { lhhoushModel in
+            completion(lhhoushModel)
         }
     }
 }

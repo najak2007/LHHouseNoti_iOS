@@ -55,7 +55,9 @@ struct ContentView: View {
                         AlarmReceiveView(viewModel: viewModel)
                             .navigationDestination(item: $viewModel.pushedViewDetail) { lhhouseModel in
                                 if URL(string: lhhouseModel.DTL_URL) != nil {
-                                    ExpandWebView(lhhouseModel: lhhouseModel)
+                                    
+                                    ExpandWebView(lhhouseModel: lhhouseModel, isAlarmReaded: true)
+                                        
                                         .toolbar(.hidden, for: .tabBar) // 푸시될 때 하단 탭 숨김
                                 }
                             }
@@ -68,5 +70,35 @@ struct ContentView: View {
                 }
             }
         }
+        .onAppear {
+            handlePendingPushIfNeeded()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name(Config.PUSH_NOTIFICATION_SELECTED_ID))) { notification in
+            guard let userInfo = notification.userInfo
+            else {
+                return
+            }
+            navigateToAlarmDetail(userInfo: userInfo)
+        }
+    }
+    
+    private func handlePendingPushIfNeeded() {
+        guard let userInfo = PendingPushNavigation.payload else {
+            return
+        }
+        PendingPushNavigation.payload = nil
+        navigateToAlarmDetail(userInfo: userInfo)
+    }
+    
+    private func navigateToAlarmDetail(userInfo: [AnyHashable: Any]) {
+        viewModel.handlePushNavigation(userInfo: userInfo, completion: { lhHouseModel in
+            if let lhHouseModel = lhHouseModel {
+                tabIndex = 2
+                
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                    viewModel.pushedViewDetail = lhHouseModel
+                }
+            }
+        })
     }
 }
