@@ -16,6 +16,7 @@ import FirebaseMessaging
 
 var expandWebViewCloseHandler = PassthroughSubject<Bool, Never>()
 var lhhouseAlarmYNHandler = PassthroughSubject<[String: Any], Never>()
+var lhhouseFavoritesYNHandler = PassthroughSubject<Void, Never>()
 
 class JSWebViewModel: ObservableObject {
     @Published var deviceUUID: String = ""
