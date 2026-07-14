@@ -27,7 +27,8 @@ struct JSWebView: UIViewRepresentable {
             // 1. 💡 전역 CSS 규칙 주입 (새로 요청하신 id와 class 추가)
             var styleNode = document.createElement('style');
             styleNode.type = 'text/css';
-            var cssRules = '#mNav, #header, .subHeader { display: none !important; visibility: hidden !important; opacity: 0 !important; pointer-events: none !important; height: 0 !important; width: 0 !important; }';
+            var cssRules = '#mNav, #header, .subHeader { display: none !important; visibility: hidden !important; opacity: 0 !important; pointer-events: none !important; height: 0 !important; width: 0 !important; } ' +
+            '* { -webkit-touch-callout: none !important; -webkit-user-select: none !important; -webkit-tap-highlight-color: transparent !important; }';
             styleNode.innerHTML = cssRules;
             document.documentElement.appendChild(styleNode);
 
@@ -141,10 +142,16 @@ struct JSWebView: UIViewRepresentable {
 
         let webView = WKWebView(frame: .zero, configuration: config)
         webView.navigationDelegate = context.coordinator
+        webView.uiDelegate = context.coordinator
 
         if #available(iOS 16.4, *) {
             webView.isInspectable = true
         }
+        
+        webView.scrollView.pinchGestureRecognizer?.delegate = context.coordinator
+        webView.scrollView.pinchGestureRecognizer?.isEnabled = false
+        webView.scrollView.bouncesZoom = false
+        webView.allowsLinkPreview = false
         
         webView.backgroundColor = .white
         viewModel.webView = webView
@@ -161,7 +168,7 @@ struct JSWebView: UIViewRepresentable {
     }
 
     // MARK: - Coordinator
-    class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
+    class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUIDelegate, UIGestureRecognizerDelegate {
         let viewModel: JSWebViewModel
         var isInitialLoad = true
 
@@ -169,8 +176,22 @@ struct JSWebView: UIViewRepresentable {
             self.viewModel = viewModel
         }
 
+        @available(iOS 13.0, *)
+        func webView(
+            _ webView: WKWebView,
+            contextMenuConfigurationForElement elementInfo: WKContextMenuElementInfo,
+            completionHandler: @escaping (UIContextMenuConfiguration?) -> Void
+        ) {
+            completionHandler(nil) // nil 리턴 → 메뉴 자체가 뜨지 않음
+        }
+        
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
             viewModel.sendDeviceInfoToWeb()
+            
+            webView.scrollView.pinchGestureRecognizer?.isEnabled = false
+            webView.scrollView.bouncesZoom = false
+            webView.scrollView.maximumZoomScale = 1.0
+            webView.scrollView.minimumZoomScale = 1.0
             
             // ------------------------------------------------------------------
             // 💡 [추가] 웹뷰 로딩이 완전히 끝난 시점(Ajax dynamic load 대응)에 다시 한번 숨김 처리 실행
@@ -245,7 +266,7 @@ struct JSWebView: UIViewRepresentable {
                 
                 if action == "clickSaveItrPan" {
                     print("관심공고 등록이 클릭됨!")
-                    
+                    lhhouseFavoritesYNHandler.send()
                 }
                 
                 if action == "clickDocViewer" {
@@ -292,6 +313,21 @@ struct JSWebView: UIViewRepresentable {
                     rootVC.present(safariVC, animated: true, completion: nil)
                 }
             }
+        }
+        
+        func gestureRecognizer(
+            _ gestureRecognizer: UIGestureRecognizer,
+            shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer
+        ) -> Bool {
+            return false
+        }
+
+        // 💡 pinch gesture recognizer는 애초에 시작조차 못 하게 차단
+        func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+            if gestureRecognizer is UIPinchGestureRecognizer {
+                return false
+            }
+            return true
         }
     }
 }

@@ -86,6 +86,11 @@ struct ExpandWebView: View {
                 setAlarmReadStatusChange(lhhouseModel: lhhouseModel, isReadStatus: false)
             }
         }
+        .onReceive(lhhouseFavoritesYNHandler) {
+            self.jsWebViewModel.saveLHHouseFavorite(lhhouseModel) { isFavorite in
+                self.isFavorite = isFavorite
+            }
+        }
     }
     
     private func setAlarmReadStatusChange(lhhouseModel: LHHouseModel, isReadStatus: Bool = false) {
