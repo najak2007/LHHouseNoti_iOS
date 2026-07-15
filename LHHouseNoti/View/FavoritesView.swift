@@ -29,7 +29,7 @@ struct FavoritesView: View {
                 if viewModel.lhhouseFavorites.count == 0 {
                     Spacer()
                     
-                    Text("즐겨 찾기 하신 공지가 없습니다.")
+                    Text("즐겨찾기한 공고가 없습니다.")
                         .font(.system(size: 28, weight: .semibold))
                         .foregroundStyle(Color.gray)
                     
