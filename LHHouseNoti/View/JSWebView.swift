@@ -27,8 +27,8 @@ struct JSWebView: UIViewRepresentable {
             // 1. 💡 전역 CSS 규칙 주입 (새로 요청하신 id와 class 추가)
             var styleNode = document.createElement('style');
             styleNode.type = 'text/css';
-            var cssRules = '#mNav, #header, .subHeader { display: none !important; visibility: hidden !important; opacity: 0 !important; pointer-events: none !important; height: 0 !important; width: 0 !important; } ' +
-            '* { -webkit-touch-callout: none !important; -webkit-user-select: none !important; -webkit-tap-highlight-color: transparent !important; }';
+            var cssRules = '#mNav, #header, .subHeader, #slpaHistory, #btn_goGrc1, #btn_goGrc2, .btns.ar, a[href*="saveItrPan"], a[href*="goList"] { display: none !important; visibility: hidden !important; opacity: 0 !important; pointer-events: none !important; height: 0 !important; width: 0 !important; } ' +
+                               '* { -webkit-touch-callout: none !important; -webkit-user-select: none !important; }';
             styleNode.innerHTML = cssRules;
             document.documentElement.appendChild(styleNode);
 
@@ -206,6 +206,16 @@ struct JSWebView: UIViewRepresentable {
             if (header) {
                 header.style.setProperty('display', 'none', 'important');
             }
+            
+            var slpaHistory = document.getElementById('slpaHistory');
+            if (slpaHistory) { slpaHistory.style.setProperty('display', 'none', 'important'); }
+
+            var btn_goGrc1 = document.getElementById('btn_goGrc1');
+            if (btn_goGrc1) { btn_goGrc1.style.setProperty('display', 'none', 'important'); }
+
+            var btn_goGrc2 = document.getElementById('btn_goGrc2');
+            if (btn_goGrc2) { btn_goGrc2.style.setProperty('display', 'none', 'important'); }
+
             
             document.body.style.setProperty('padding-bottom', '0px', 'important');
             document.body.style.setProperty('padding-top', '0px', 'important');
